@@ -1,0 +1,77 @@
+* Относно String функциите
+
+	== оператора между стринговете се използва за сравняване на референции
+	
+	// се използва за сравнение на съдържанието на стринг 
+	.equals(String str);
+	
+	// съдържанието на String-a ще се добави в String pool-a, но след извикването от стринг на този метод, самият стринг няма да сочи към нищо
+	.intern();
+	
+	// Разделя един стринг на няколко стринга всеки път като види regex низ-а, връща масив от стрингове 
+	.split(String regex);
+	
+	// Връща елемента char на позиция index, запомни не можем да достъпваме даден елемент от низа ето така str[i]
+	.charAt(int index);
+	
+	// Връща array от char, като съдържа всеки един символ от низ-а 
+	.toCharArray();
+	
+	// Взима елементите на един масив от chars и ги конкатенира, за да наоравят един стринг 
+	.valueOf();
+	
+	// прави стринга в LowerCase
+	.toLowerCase();
+	
+	// прави стринга в UpperCase
+	.toUpperCase();
+	
+	// на мястото на всяки oldChar, го заменя с newChar
+	.replace(char oldChar, char newChar);
+	
+	// Връща substring, който се намира между позиците startIndex и endIndex
+	.substring(int startIndex, int stopIndex);
+	
+	// Проверява дали стринг-а съдържа substring
+	.contains(String sub);
+	
+	// проверява дали string-a започва с substring
+	.startsWith(String sub);
+	
+	// проверява дали string-a приключва с substring
+	.endsWith(String sub);
+	
+	// проверя на кой индекс започава substring 
+	.indexOf(String sub)
+	
+	// дава ти големите на стринг-а 
+	.length()
+	
+	// проверява дали стринг-а е празен
+	.isEmpty();
+	
+	// проверява дали стринг-а е съставен само от whitespaces
+	.isBlank();
+	
+	// проверява дали стринговете са равни като игнорира case-a 
+	.equalsIgnoreCase(String str);
+	
+* Относно Array 
+
+	// Съдържанието на един масив се превръща в String, тоест ще изглежда така "[elem1, elem2, elem3, ..., elemn]"
+	Аrrays.toString();
+	
+	// Сортира array
+	Arrays.sort(Object array);
+	
+	// Намира index-a на подаден елемент като използва binarySearch
+	Arrays.binarySearch(Object array, int key);
+	
+	// Връща array като този array копира информацията от този подаден като аргумент
+	Arrays.copyOf(Object array, int length);
+	
+	// Сравнява съдържанието на два масива 
+	Arrays.equals(Object array, Object otherArray);
+	
+	// Сравнява съдържанието на няколко измерни масива 
+	Arrays.deepEquals(Object array, Object otherArray);

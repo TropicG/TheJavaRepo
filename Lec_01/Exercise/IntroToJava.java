@@ -79,7 +79,8 @@ public class IntroToJava {
         // replaces the first argument with the second one
         String replaced = "cut".replace('c', 'p');
 
-        // takes a substring from a string and returns it as a String
+        // takes a substring from a string and retu
+        // rns it as a String
         String substring = "Anaconda".substring(2,6); // "acon"
 
         // checks if the passed string is contained in a string
