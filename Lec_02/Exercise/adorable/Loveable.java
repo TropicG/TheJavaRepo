@@ -1,0 +1,3 @@
+interface Loveable {
+    void love();
+}

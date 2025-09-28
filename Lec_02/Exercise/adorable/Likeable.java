@@ -1,0 +1,3 @@
+interface likeable {
+    void like();
+}
