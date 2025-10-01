@@ -92,3 +92,20 @@
 	
 	// Заменяне на всички елементи с подадена стойност 
 	Collections.fill(List<T> list, Object obj)
+	
+	// Обръщане на реда на целия List като е in-place 
+	Collections.reverse(List<?> list); 
+	
+	// Разместване на елементите като всеки елемент е на произволна позиция, in-place 
+	Collections.shuffle(List<?> list);
+	
+	// Разменя местата на елементите на позициите i и j, като е in-place 
+	Collections.swap(List<?> list, int i, int j);
+	
+	// Намиране на най-големия и най-малкия елемент в дадена колекция, трябва да има имплементиран Comparable 
+	Collections.min(Collection c)
+	Collections.max(Collection c)
+	
+	// Намиране на броя на срещаинята на даден елемент 
+	Collections.frequency(nums, 7)
+	
