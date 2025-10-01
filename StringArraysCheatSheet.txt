@@ -75,3 +75,20 @@
 	
 	// Сравнява съдържанието на няколко измерни масива 
 	Arrays.deepEquals(Object array, Object otherArray);
+	
+* Относно Collections
+
+	// Сортира подадения лист базирано на естествения ред между обектите на класа T 
+	Collections.sort(List<T> list)
+	
+	// Сортира подадения лист базирано на логиката дефинирана в Comparator-array, а Collections.reverseOrder() е помощен метод, който директно ти връща говот Comparator
+	Collections.sort(List<T> list, Collections.reverseOrder());
+	
+	// Търси в подаден List елемента key чрез двоично търсене 
+	Collections.binarySearch(List<? extends T>, T key)
+	
+	// Копира информацията от src в dest 
+	Collections.copy(List<T> dest, List<T> src)
+	
+	// Заменяне на всички елементи с подадена стойност 
+	Collections.fill(List<T> list, Object obj)
