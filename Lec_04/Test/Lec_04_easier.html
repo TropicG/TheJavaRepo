@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест по Java Collections Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .quiz-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .correct {
+            background-color: #10B981 !important; /* Green 500 */
+            color: white !important;
+            border-color: #059669 !important;
+        }
+        .incorrect {
+            background-color: #EF4444 !important; /* Red 500 */
+            color: white !important;
+            border-color: #DC2626 !important;
+        }
+        .disabled-option {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="bg-white w-full max-w-3xl rounded-2xl shadow-lg p-6 md:p-8">
+        <div id="quiz-header" class="mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800 text-center">Тест по Java Collections Framework</h1>
+            <div class="mt-4 bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-center text-sm text-slate-600 mt-2">Въпрос 0 от 75</p>
+        </div>
+
+        <div id="question-area">
+            <h2 id="question-text" class="text-xl font-semibold text-slate-700 mb-5">Зареждане на въпроси...</h2>
+            <div id="options-container" class="space-y-3">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <div id="feedback-area" class="mt-4 text-center">
+            <p id="feedback-text" class="text-lg font-medium">&nbsp;</p>
+        </div>
+
+        <div id="quiz-footer" class="mt-6 flex justify-center">
+            <button id="next-button" class="hidden bg-indigo-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-indigo-700 transition-colors">Следващ въпрос</button>
+        </div>
+
+        <div id="results-area" class="hidden text-center">
+            <h2 class="text-2xl font-bold text-slate-800">Тестът приключи!</h2>
+            <p class="text-3xl font-bold mt-4" id="score-text">Вашият резултат: 0/75</p>
+            <p class="text-lg text-slate-600 mt-2" id="score-percentage"></p>
+            <button id="restart-button" class="mt-8 bg-indigo-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-indigo-700 transition-colors">Започни отначало</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = {
+            "questions": [
+                // Q1
+                { "questionNumber": 1, "question": "Кое от изброените НЕ е основна операция, свързана със структурите от данни?", "answerOptions": [{ "text": "Добавяне на елемент", "isCorrect": false }, { "text": "Компилиране на структурата", "isCorrect": true }, { "text": "Търсене на елемент", "isCorrect": false }, { "text": "Обхождане на елементите", "isCorrect": false }], "hint": "Помислете коя дейност се отнася до процеса на програмиране, а не до манипулиране на данни." },
+                // Q2
+                { "questionNumber": 2, "question": "Кой е основният недостатък на масивите в Java?", "answerOptions": [{ "text": "Бавен достъп до елемент по индекс", "isCorrect": false }, { "text": "Неефективно използване на паметта", "isCorrect": false }, { "text": "Фиксиран размер след създаване", "isCorrect": true }, { "text": "Сложност при използване", "isCorrect": false }], "hint": "Спомнете си какво трябва да направите, ако искате да добавите повече елементи в масив, отколкото е първоначалният му капацитет." },
+                // Q3
+                { "questionNumber": 3, "question": "Каква е основната разлика между колекциите и масивите в Java?", "answerOptions": [{ "text": "Масивите могат да съхраняват само примитивни типове, а колекциите - само обекти.", "isCorrect": false }, { "text": "Колекциите имат динамичен размер, докато масивите имат фиксиран.", "isCorrect": true }, { "text": "Достъпът до елементи в колекциите винаги е по-бърз.", "isCorrect": false }, { "text": "Колекциите не могат да съдържат дублиращи се елементи.", "isCorrect": false }], "hint": "Помислете за гъвкавостта по отношение на броя на елементите." },
+                // Q4
+                { "questionNumber": 4, "question": "Кои от изброените структури данни НЕ са част от основните имплементации на Java Collections Framework?", "answerOptions": [{ "text": "Свързани списъци", "isCorrect": false }, { "text": "Хеш таблици", "isCorrect": false }, { "text": "Графи", "isCorrect": true }, { "text": "Дървета", "isCorrect": false }], "hint": "Коя от изброените структури обикновено се имплементира с помощта на други, като списъци или матрици, и не е директно предоставена в `java.util`?" },
+                // Q5
+                { "questionNumber": 5, "question": "Какво е предназначението на итератора (Iterator) в Java?", "answerOptions": [{ "text": "Да съхранява елементите на колекцията по сортиран начин.", "isCorrect": false }, { "text": "Да осигури универсален начин за обхождане на елементите на всяка колекция.", "isCorrect": true }, { "text": "Да добавя нови елементи в колекцията по-бързо.", "isCorrect": false }, { "text": "Да проверява за наличието на дублиращи се елементи.", "isCorrect": false }], "hint": "Помислете за принципа на абстракция и как той се прилага при преминаване през различни видове колекции." },
+                // Q6
+                { "questionNumber": 6, "question": "Кой метод на интерфейса `Iterator` връща следващия елемент от колекцията?", "answerOptions": [{ "text": "hasNext()", "isCorrect": false }, { "text": "next()", "isCorrect": true }, { "text": "remove()", "isCorrect": false }, { "text": "peek()", "isCorrect": false }], "hint": "Кое име на метод най-добре описва действието \"дай ми следващия\"?" },
+                // Q7
+                { "questionNumber": 7, "question": "Каква е разликата между `Iterable` и `Iterator`?", "answerOptions": [{ "text": "Няма разлика, те са синоними.", "isCorrect": false }, { "text": "`Iterable` е обектът, който извършва обхождането, а `Iterator` е обектът, който може да бъде обходен.", "isCorrect": false }, { "text": "`Iterable` е източник на данни, който може да предостави `Iterator`, докато `Iterator` е обектът, който реално извършва обхождането.", "isCorrect": true }, { "text": "`Iterator` се използва само за `List`, а `Iterable` - за `Set`.", "isCorrect": false }], "hint": "Единият е \"какво\" (обект, който може да бъде обходен), а другият е \"кой\" (обектът, който го обхожда)." },
+                // Q8
+                { "questionNumber": 8, "question": "Кой е единственият безопасен начин за премахване на елемент от колекция по време на обхождане с итератор?", "answerOptions": [{ "text": "Използване на метода `remove(Object)` на самата колекция.", "isCorrect": false }, { "text": "Използване на `for-each` цикъл и метода `remove()` на колекцията.", "isCorrect": false }, { "text": "Използване на метода `remove()` на итератора.", "isCorrect": true }, { "text": "Създаване на копие на колекцията и премахване от него.", "isCorrect": false }], "hint": "Помислете кой обект управлява процеса на итериране и следователно трябва да бъде уведомен за промените." },
+                // Q9
+                { "questionNumber": 9, "question": "Какво изключение най-вероятно ще бъде хвърлено, ако модифицирате колекция (напр. с `add()` или `clear()`) докато я обхождате с `for-each` цикъл?", "answerOptions": [{ "text": "NullPointerException", "isCorrect": false }, { "text": "IllegalStateException", "isCorrect": false }, { "text": "ArrayIndexOutOfBoundsException", "isCorrect": false }, { "text": "ConcurrentModificationException", "isCorrect": true }], "hint": "Името на изключението подсказва за \"едновременна модификация\"." },
+                // Q10
+                { "questionNumber": 10, "question": "Кой интерфейс стои в основата на йерархията на `Collection` и гарантира, че елементите могат да бъдат обхождани?", "answerOptions": [{ "text": "List", "isCorrect": false }, { "text": "Iterable", "isCorrect": true }, { "text": "Iterator", "isCorrect": false }, { "text": "Object", "isCorrect": false }], "hint": "Помислете кой интерфейс има само един метод - `iterator()`." },
+                // Q11
+                { "questionNumber": 11, "question": "Коя от следните характеристики НЕ е вярна за интерфейса `List`?", "answerOptions": [{ "text": "Елементите се достъпват чрез целочислен индекс.", "isCorrect": false }, { "text": "Допуска дублиращи се елементи.", "isCorrect": false }, { "text": "Гарантира, че елементите са винаги сортирани.", "isCorrect": true }, { "text": "Това е последователна колекция от елементи.", "isCorrect": false }], "hint": "Коя характеристика е специфична за `SortedSet` или `SortedMap`, а не за `List`?" },
+                // Q12
+                { "questionNumber": 12, "question": "Кой от методите на интерфейса `Collection` се използва за премахване на всички елементи от колекцията, които се съдържат и в друга, подадена като параметър, колекция?", "answerOptions": [{ "text": "clear()", "isCorrect": false }, { "text": "retainAll(Collection<?> c)", "isCorrect": false }, { "text": "removeAll(Collection<?> c)", "isCorrect": true }, { "text": "containsAll(Collection<?> c)", "isCorrect": false }], "hint": "Потърсете метода, чието име буквално означава \"премахни всички\"." },
+                // Q13
+                { "questionNumber": 13, "question": "Кой метод е за предпочитане при конвертиране на колекция в масив, ако искаме масивът да е от специфичен тип?", "answerOptions": [{ "text": "Object[] toArray()", "isCorrect": false }, { "text": "<T> T[] toArray(T[] a)", "isCorrect": true }, { "text": "new T[size()]", "isCorrect": false }, { "text": "stream().toArray()", "isCorrect": false }], "hint": "Помислете кой от двата `toArray` метода ви дава контрол върху типа на върнатия масив." },
+                // Q14
+                { "questionNumber": 14, "question": "Каква е сложността на операцията `get(index)` в `ArrayList`?", "answerOptions": [{ "text": "O(1)", "isCorrect": true }, { "text": "O(n)", "isCorrect": false }, { "text": "O(log n)", "isCorrect": false }, { "text": "O(n^2)", "isCorrect": false }], "hint": "Спомнете си как работи достъпът до елементи в обикновен масив." },
+                // Q15
+                { "questionNumber": 15, "question": "Коя операция е много бавна (O(n)) в `ArrayList`, но много бърза (O(1)) в `LinkedList`?", "answerOptions": [{ "text": "Достъп до елемент по индекс (`get(index)`).", "isCorrect": false }, { "text": "Добавяне на елемент в края (`add(E element)`).", "isCorrect": false }, { "text": "Проверка за съществуване на елемент (`contains(Object o)`).", "isCorrect": false }, { "text": "Добавяне на елемент в началото (`add(0, E element)`).", "isCorrect": true }], "hint": "Помислете коя операция изисква пренареждане на голям брой елементи в структура, базирана на масив." },
+                // Q16
+                { "questionNumber": 16, "question": "Кога е препоръчително да се използва `LinkedList` вместо `ArrayList`?", "answerOptions": [{ "text": "Когато основната операция е чест достъп до произволни елементи по техния индекс.", "isCorrect": false }, { "text": "Когато колекцията ще има малък и фиксиран брой елементи.", "isCorrect": false }, { "text": "Когато основните операции са често добавяне и премахване на елементи от началото или края на списъка.", "isCorrect": true }, { "text": "Когато е необходимо да се пести памет.", "isCorrect": false }], "hint": "Сравнете как двете структури се справят с промени в краищата на списъка." },
+                // Q17
+                { "questionNumber": 17, "question": "Кой от следните класове се счита за `legacy` (остарял) и се препоръчва да се заменя с `ArrayDeque` за имплементация на стек?", "answerOptions": [{ "text": "ArrayList", "isCorrect": false }, { "text": "LinkedList", "isCorrect": false }, { "text": "Vector", "isCorrect": false }, { "text": "Stack", "isCorrect": true }], "hint": "Кой клас има лоша репутация заради наследяването си от синхронизиран, но по-бавен клас?" },
+                // Q18
+                { "questionNumber": 18, "question": "Какво връща методът `subList(from, to)` на интерфейса `List`?", "answerOptions": [{ "text": "Ново копие на част от оригиналния списък.", "isCorrect": false }, { "text": "Изглед (view) към част от оригиналния списък.", "isCorrect": true }, { "text": "Масив, съдържащ елементите от посочения диапазон.", "isCorrect": false }, { "text": "Immutable (непроменим) списък с елементите от диапазона.", "isCorrect": false }], "hint": "Помислете за връзката между върнатия обект и оригиналния списък. Дали са независими?" },
+                // Q19
+                { "questionNumber": 19, "question": "Кой е основният принцип на работа на интерфейса `Queue`?", "answerOptions": [{ "text": "LIFO (Last-In, First-Out)", "isCorrect": false }, { "text": "FIFO (First-In, First-Out)", "isCorrect": true }, { "text": "Сортиран ред", "isCorrect": false }, { "text": "Няма гарантиран ред", "isCorrect": false }], "hint": "Представете си опашка от хора в магазин." },
+                // Q20
+                { "questionNumber": 20, "question": "Каква е разликата между методите `remove()` и `poll()` на интерфейса `Queue`?", "answerOptions": [{ "text": "`remove()` премахва елемент от края, а `poll()` - от началото.", "isCorrect": false }, { "text": "`remove()` хвърля изключение, ако опашката е празна, а `poll()` връща `null`.", "isCorrect": true }, { "text": "`poll()` е по-бърз от `remove()`.", "isCorrect": false }, { "text": "`remove()` връща премахнатия елемент, а `poll()` не връща нищо.", "isCorrect": false }], "hint": "Помислете как двата метода сигнализират за неуспешна операция (опит за премахване от празна опашка)." },
+                // Q21
+                { "questionNumber": 21, "question": "Кой чифт методи на интерфейса `Queue` служи за поглеждане на първия елемент, без да го премахва?", "answerOptions": [{ "text": "add() и offer()", "isCorrect": false }, { "text": "remove() и poll()", "isCorrect": false }, { "text": "element() и peek()", "isCorrect": true }, { "text": "get() и first()", "isCorrect": false }], "hint": "Както при `remove`/`poll`, единият метод хвърля изключение, а другият връща специална стойност при неуспех." },
+                // Q22
+                { "questionNumber": 22, "question": "Коя имплементация на `Queue` подрежда елементите според техния естествен ред или зададен `Comparator`?", "answerOptions": [{ "text": "ArrayDeque", "isCorrect": false }, { "text": "LinkedList", "isCorrect": false }, { "text": "PriorityQueue", "isCorrect": true }, { "text": "Vector", "isCorrect": false }], "hint": "Името на класа подсказва, че елементите имат \"приоритет\"." },
+                // Q23
+                { "questionNumber": 23, "question": "Коя е препоръчителната имплементация за стандартна FIFO опашка или LIFO стек?", "answerOptions": [{ "text": "LinkedList", "isCorrect": false }, { "text": "PriorityQueue", "isCorrect": false }, { "text": "ArrayDeque", "isCorrect": true }, { "text": "Stack", "isCorrect": false }], "hint": "Потърсете имплементацията, която е двупосочна опашка, базирана на масив." },
+                // Q24
+                { "questionNumber": 24, "question": "Каква е сложността на операциите `offer` и `poll` в `ArrayDeque`?", "answerOptions": [{ "text": "O(n)", "isCorrect": false }, { "text": "O(log n)", "isCorrect": false }, { "text": "O(1)", "isCorrect": true }, { "text": "O(n log n)", "isCorrect": false }], "hint": "Помислете дали броят на елементите в опашката влияе на скоростта на добавяне или премахване от краищата." },
+                // Q25
+                { "questionNumber": 25, "question": "Защо операциите `offer` и `poll` в `PriorityQueue` имат сложност O(log n)?", "answerOptions": [{ "text": "Защото `PriorityQueue` използва свързан списък.", "isCorrect": false }, { "text": "Защото след добавяне или премахване, вътрешната структура (heap) трябва да се пренареди, за да запази свойството си.", "isCorrect": true }, { "text": "Защото всеки елемент се сравнява с всички останали.", "isCorrect": false }, { "text": "Защото използва двоично търсене за намиране на правилното място.", "isCorrect": false }], "hint": "Каква е цената за поддържането на елемента с най-висок приоритет винаги на върха?" },
+                // Q26
+                { "questionNumber": 26, "question": "Коя е основната характеристика на интерфейса `Set`?", "answerOptions": [{ "text": "Запазва реда на добавяне на елементите.", "isCorrect": false }, { "text": "Не позволява дублиращи се елементи.", "isCorrect": true }, { "text": "Позволява достъп до елементите по индекс.", "isCorrect": false }, { "text": "Работи на принципа FIFO.", "isCorrect": false }], "hint": "Какво отличава математическото понятие \"множество\"?" },
+                // Q27
+                { "questionNumber": 27, "question": "Какво ще върне методът `add(E e)` на `HashSet`, ако елементът `e` вече съществува в множеството?", "answerOptions": [{ "text": "true", "isCorrect": false }, { "text": "false", "isCorrect": true }, { "text": "Ще хвърли `IllegalArgumentException`.", "isCorrect": false }, { "text": "null", "isCorrect": false }], "hint": "Помислете дали колекцията се променя при опит за добавяне на дубликат." },
+                // Q28
+                { "questionNumber": 28, "question": "Коя имплементация на `Set` поддържа елементите в ред на тяхното добавяне?", "answerOptions": [{ "text": "HashSet", "isCorrect": false }, { "text": "TreeSet", "isCorrect": false }, { "text": "EnumSet", "isCorrect": false }, { "text": "LinkedHashSet", "isCorrect": true }], "hint": "Кое име на клас съдържа думата \"Linked\", подсказваща за връзка между елементите в последователност?" },
+                // Q29
+                { "questionNumber": 29, "question": "В какъв случай бихте използвали `TreeSet`?", "answerOptions": [{ "text": "Когато скоростта на добавяне и проверка е най-важният приоритет и редът няма значение.", "isCorrect": false }, { "text": "Когато е необходимо елементите да бъдат винаги подредени в сортиран ред.", "isCorrect": true }, { "text": "Когато се работи само с enum типове и се търси максимална ефективност.", "isCorrect": false }, { "text": "Когато е важно да се запази редът на вмъкване на елементите.", "isCorrect": false }], "hint": "Помислете коя структура от данни е най-подходяща за съхранение на сортирани данни." },
+                // Q30
+                { "questionNumber": 30, "question": "Каква вътрешна структура от данни използва `HashSet`?", "answerOptions": [{ "text": "Червено-черно дърво", "isCorrect": false }, { "text": "Двойно свързан списък", "isCorrect": false }, { "text": "Хеш таблица (вътрешно използва `HashMap`)", "isCorrect": true }, { "text": "Битов масив (bit vector)", "isCorrect": false }], "hint": "Името на класа дава силна подсказка." },
+                // Q31
+                { "questionNumber": 31, "question": "Какво представляват `initial capacity` и `load factor` при конструиране на `HashSet`?", "answerOptions": [{ "text": "`initial capacity` е максималният брой елементи, а `load factor` е текущият брой елементи.", "isCorrect": false }, { "text": "`initial capacity` е броят на \"кофичките\" в хеш таблицата, а `load factor` е праг, при достигането на който таблицата се разширява.", "isCorrect": true }, { "text": "`initial capacity` е колко памет заема, а `load factor` е скоростта на добавяне.", "isCorrect": false }, { "text": "Те са свързани само с `TreeSet`, не с `HashSet`.", "isCorrect": false }], "hint": "Помислете как една хеш таблица управлява вътрешното си пространство, за да избегне твърде много колизии." },
+                // Q32
+                { "questionNumber": 32, "question": "Какво ще се случи, ако се опитате да добавите в `TreeSet`() (създаден с конструктора по подразбиране) обект от клас, който не имплементира `Comparable`?", "answerOptions": [{ "text": "Обектът ще бъде добавен в началото.", "isCorrect": false }, { "text": "Методът `add()` ще върне `false`.", "isCorrect": false }, { "text": "Ще бъде хвърлено `ClassCastException`.", "isCorrect": true }, { "text": "Обектът ще бъде добавен, но `TreeSet` няма да бъде сортиран.", "isCorrect": false }], "hint": "Как `TreeSet` разбира къде да постави новия елемент, ако няма инструкции за сравнение?" },
+                // Q33
+                { "questionNumber": 33, "question": "Кога се използва `Comparator`, а не `Comparable`?", "answerOptions": [{ "text": "Когато искаме да дефинираме основния, естествен ред за един клас.", "isCorrect": false }, { "text": "Когато искаме да сортираме обекти от клас, който не можем да променим, или искаме да имаме няколко различни начина за сортиране.", "isCorrect": true }, { "text": "Когато работим с примитивни типове.", "isCorrect": false }, { "text": "`Comparator` е остарял и трябва да се използва `Comparable`.", "isCorrect": false }], "hint": "Помислете кой от двата интерфейса е по-гъвкав и не изисква промяна на оригиналния клас." },
+                // Q34
+                { "questionNumber": 34, "question": "Какво означава правилото \"консистентност с `equals()`\" за `Comparable`?", "answerOptions": [{ "text": "`e1.compareTo(e2) == 0` трябва да връща `true` винаги, когато `e1.equals(e2)` връща `true`.", "isCorrect": true }, { "text": "`compareTo` винаги трябва да използва същите полета като `equals`.", "isCorrect": false }, { "text": "Ако `equals` върне `true`, `compareTo` трябва да върне 1.", "isCorrect": false }, { "text": "`equals` трябва да бъде имплементиран преди `compareTo`.", "isCorrect": false }], "hint": "Как сортираните колекции като `TreeSet` проверяват за \"равенство\" на елементи?" },
+                // Q35
+                { "questionNumber": 35, "question": "Каква е сложността на операциите `add` и `contains` в `TreeSet`?", "answerOptions": [{ "text": "O(1)", "isCorrect": false }, { "text": "O(log n)", "isCorrect": true }, { "text": "O(n)", "isCorrect": false }, { "text": "O(n^2)", "isCorrect": false }], "hint": "Помислете за сложността на търсене в балансирано двоично дърво." },
+                // Q36
+                { "questionNumber": 36, "question": "Защо обхождането на `LinkedHashSet` с итератор (метод `next()`) е с константна сложност O(1)?", "answerOptions": [{ "text": "Защото използва хеш таблица.", "isCorrect": false }, { "text": "Защото поддържа вътрешен свързан списък, който свързва елементите в реда на добавянето им.", "isCorrect": true }, { "text": "Защото елементите са сортирани.", "isCorrect": false }, { "text": "Защото използва масив.", "isCorrect": false }], "hint": "Коя допълнителна структура, освен хеш таблица, му позволява да помни реда?" },
+                // Q37
+                { "questionNumber": 37, "question": "Каква е основната структура от данни, която представлява интерфейсът `java.util.Map`?", "answerOptions": [{ "text": "Подредена последователност от елементи.", "isCorrect": false }, { "text": "Множество от уникални елементи.", "isCorrect": false }, { "text": "Колекция от двойки ключ-стойност.", "isCorrect": true }, { "text": "Опашка от елементи, чакащи обработка.", "isCorrect": false }], "hint": "Помислете за речник, където всяка дума (ключ) има своето значение (стойност)." },
+                // Q38
+                { "questionNumber": 38, "question": "Какво ще върне `map.put(key, value)`, ако ключът `key` вече съществува в `HashMap`?", "answerOptions": [{ "text": "null", "isCorrect": false }, { "text": "Новата стойност (`value`), която току-що е била добавена.", "isCorrect": false }, { "text": "Старата стойност, която е била асоциирана с този ключ.", "isCorrect": true }, { "text": "true, за да индикира, че операцията е успешна.", "isCorrect": false }], "hint": "Помислете как методът може да ви информира какво е било заменено." },
+                // Q39
+                { "questionNumber": 39, "question": "Кой метод се използва за получаване на стойността, свързана с даден ключ в `Map`?", "answerOptions": [{ "text": "find(Object key)", "isCorrect": false }, { "text": "get(Object key)", "isCorrect": true }, { "text": "retrieve(Object key)", "isCorrect": false }, { "text": "value(Object key)", "isCorrect": false }], "hint": "Името на метода е просто и директно - \"вземи\"." },
+                // Q40
+                { "questionNumber": 40, "question": "Защо методът `values()` на `Map` връща `Collection<V>`, а не `Set<V>`?", "answerOptions": [{ "text": "Защото `Collection` е по-бърз от `Set`.", "isCorrect": false }, { "text": "Защото стойностите в един `Map` могат да се повтарят.", "isCorrect": true }, { "text": "Защото е по-лесно за имплементация.", "isCorrect": false }, { "text": "Защото `Collection` позволява `null` стойности.", "isCorrect": false }], "hint": "Помислете за изискванията за уникалност на ключовете спрямо стойностите." },
+                // Q41
+                { "questionNumber": 41, "question": "Кой е най-ефективният начин за обхождане на `Map`, ако са ви нужни едновременно и ключът, и стойността на всяка двойка?", "answerOptions": [{ "text": "Да се итерира през `keySet()` и за всеки ключ да се вика `get(key)`.", "isCorrect": false }, { "text": "Да се итерира през `values()`.", "isCorrect": false }, { "text": "Да се итерира през `entrySet()`.", "isCorrect": true }, { "text": "Да се конвертира мапа в `List` и да се итерира през нея.", "isCorrect": false }], "hint": "Потърсете метода, който връща колекция от \"записи\" или \"двойки\"." },
+                // Q42
+                { "questionNumber": 42, "question": "Коя имплементация на `Map` поддържа двойките сортирани по ключове?", "answerOptions": [{ "text": "HashMap", "isCorrect": false }, { "text": "LinkedHashMap", "isCorrect": false }, { "text": "TreeMap", "isCorrect": true }, { "text": "EnumMap", "isCorrect": false }], "hint": "Кой клас има аналог в света на `Set`, който също поддържа сортиран ред?" },
+                // Q43
+                { "questionNumber": 43, "question": "Каква е средната сложност на операциите `put` и `get` в `HashMap`?", "answerOptions": [{ "text": "O(1)", "isCorrect": true }, { "text": "O(n)", "isCorrect": false }, { "text": "O(log n)", "isCorrect": false }, { "text": "O(n log n)", "isCorrect": false }], "hint": "Помислете кое прави хеш-базираните структури толкова бързи." },
+                // Q44
+                { "questionNumber": 44, "question": "За да работят коректно обектите като ключове в `HashMap`, кои методи е задължително да бъдат правилно имплементирани?", "answerOptions": [{ "text": "compareTo() и toString()", "isCorrect": false }, { "text": "equals() и hashCode()", "isCorrect": true }, { "text": "clone() и finalize()", "isCorrect": false }, { "text": "get() и put()", "isCorrect": false }], "hint": "Кои два метода формират \"договора\" за равенство и хеширане в Java?" },
+                // Q45
+                { "questionNumber": 45, "question": "Какъв проблем решава интерфейсът `SequencedCollection`, въведен в Java 21?", "answerOptions": [{ "text": "Прави всички колекции по-бързи.", "isCorrect": false }, { "text": "Предоставя унифициран и предвидим API за достъп до първия и последния елемент на подредени колекции.", "isCorrect": true }, { "text": "Позволява паралелна обработка на колекции.", "isCorrect": false }, { "text": "Забранява използването на `null` елементи.", "isCorrect": false }], "hint": "Помислете за неудобството да вземете последния елемент от `List` преди Java 21." },
+                // Q46
+                { "questionNumber": 46, "question": "Кой от следните методи НЕ е част от интерфейса `SequencedCollection`?", "answerOptions": [{ "text": "getFirst()", "isCorrect": false }, { "text": "addLast(E e)", "isCorrect": false }, { "text": "sort(Comparator<E> c)", "isCorrect": true }, { "text": "reversed()", "isCorrect": false }], "hint": "Коя операция е логически приложима само за списъци, но не и за всички последователни колекции (като `Deque`)?" },
+                // Q47
+                { "questionNumber": 47, "question": "Какво връща методът `reversed()` на `SequencedCollection`?", "answerOptions": [{ "text": "Ново копие на колекцията, подредено в обратен ред.", "isCorrect": false }, { "text": "Изглед (view) на оригиналната колекция, който я представя в обратен ред.", "isCorrect": true }, { "text": "`boolean` стойност, указваща дали обръщането е успешно.", "isCorrect": false }, { "text": "Итератор, който обхожда колекцията в обратен ред.", "isCorrect": false }], "hint": "Подобно на `subList`, този метод избягва създаването на копия за по-добра производителност." },
+                // Q48
+                { "questionNumber": 48, "question": "Какво е специфичното поведение на `addFirst(E)` в `SequencedSet` (напр. `LinkedHashSet`), ако елементът вече съществува?", "answerOptions": [{ "text": "Операцията се игнорира и методът връща `false`.", "isCorrect": false }, { "text": "Хвърля се `IllegalArgumentException`.", "isCorrect": false }, { "text": "Съществуващият елемент се премества в началото на множеството.", "isCorrect": true }, { "text": "Създава се дубликат на елемента в началото.", "isCorrect": false }], "hint": "Помислете как тази нова функционалност може да се използва за имплементиране на LRU (Least Recently Used) кеш." },
+                // Q49
+                { "questionNumber": 49, "question": "Кой метод в `SequencedMap` се използва за премахване и връщане на първия запис (двойка ключ-стойност)?", "answerOptions": [{ "text": "removeFirst()", "isCorrect": false }, { "text": "getFirstEntry()", "isCorrect": false }, { "text": "pollFirstEntry()", "isCorrect": true }, { "text": "deleteFirst()", "isCorrect": false }], "hint": "Името на метода е комбинация от име на метод от `Queue` и думата, означаваща \"запис\" в `Map`." },
+                // Q50
+                { "questionNumber": 50, "question": "Каква е целта на метода `sequencedKeySet()` в `SequencedMap`?", "answerOptions": [{ "text": "Да върне `Set` с ключовете в произволен ред.", "isCorrect": false }, { "text": "Да върне `SequencedSet`, което позволява използването на методи като `getFirst()`, `getLast()` и `reversed()` директно върху множеството от ключове.", "isCorrect": true }, { "text": "Да върне `List` с ключовете.", "isCorrect": false }, { "text": "Да сортира ключовете преди да ги върне.", "isCorrect": false }], "hint": "Помислете какво липсва на `Set`, върнат от `keySet()`, за да можете лесно да вземете първия или последния ключ." },
+                // Q51
+                { "questionNumber": 51, "question": "Кой статичен метод от класа `java.util.Collections` се използва за сортиране на списък в неговия естествен ред?", "answerOptions": [{ "text": "Collections.order(List<T> list)", "isCorrect": false }, { "text": "Collections.sort(List<T> list)", "isCorrect": true }, { "text": "Collections.arrange(List<T> list)", "isCorrect": false }, { "text": "list.sort()", "isCorrect": false }], "hint": "Името на метода е просто и директно - \"сортирай\"." },
+                // Q52
+                { "questionNumber": 52, "question": "Какво е необходимо условие, за да работи успешно `Collections.binarySearch(list, key)`?", "answerOptions": [{ "text": "Списъкът `list` трябва да е `LinkedList`.", "isCorrect": false }, { "text": "Списъкът `list` трябва да бъде сортиран във възходящ ред.", "isCorrect": true }, { "text": "Списъкът `list` не трябва да съдържа `null` елементи.", "isCorrect": false }, { "text": "Обектът `key` трябва да е от същия клас като елементите в списъка.", "isCorrect": false }], "hint": "Какъв е основният принцип, на който се основава алгоритъмът за двоично търсене?" },
+                // Q53
+                { "questionNumber": 53, "question": "Кой метод от `Collections` размества елементите в списък по напълно случаен начин?", "answerOptions": [{ "text": "randomize()", "isCorrect": false }, { "text": "mix()", "isCorrect": false }, { "text": "shuffle()", "isCorrect": true }, { "text": "disorder()", "isCorrect": false }], "hint": "Помислете за английската дума за разбъркване на тесте карти." },
+                // Q54
+                { "questionNumber": 54, "question": "Какво ще се случи, ако се опитате да използвате `Collections.copy(dest, src)`, където `dest` списъкът е по-малък от `src` списъка?", "answerOptions": [{ "text": "`dest` списъкът ще бъде автоматично разширен.", "isCorrect": false }, { "text": "Ще бъдат копирани само първите `dest.size()` елемента.", "isCorrect": false }, { "text": "Ще бъде хвърлено изключение `IndexOutOfBoundsException`.", "isCorrect": true }, { "text": "Методът няма да направи нищо и няма да върне грешка.", "isCorrect": false }], "hint": "Методът за копиране презаписва съществуващи елементи, той не добавя нови." },
+                // Q55
+                { "questionNumber": 55, "question": "Кой метод от `Collections` бихте използвали, за да замените всеки елемент в един `List` с една и съща стойност?", "answerOptions": [{ "text": "replace()", "isCorrect": false }, { "text": "fill()", "isCorrect": true }, { "text": "setAll()", "isCorrect": false }, { "text": "update()", "isCorrect": false }], "hint": "Помислете за английската дума за \"запълвам\"." },
+                // Q56
+                { "questionNumber": 56, "question": "Каква е основната разлика между `Immutable` и `Unmodifiable` колекциите в Java?", "answerOptions": [{ "text": "Няма разлика, те са едно и също нещо.", "isCorrect": false }, { "text": "`Unmodifiable` колекциите са по-бързи.", "isCorrect": false }, { "text": "`Unmodifiable` е обвивка около оригинална колекция, която може да се промени, докато `Immutable` гарантира, че никой не може да промени колекцията след създаването й.", "isCorrect": true }, { "text": "`Immutable` колекциите могат да съдържат `null`, а `Unmodifiable` не могат.", "isCorrect": false }], "hint": "Помислете какво ще се случи, ако все още имате референция към оригиналния, променим списък, след като сте създали `Unmodifiable` обвивка." },
+                // Q57
+                { "questionNumber": 57, "question": "Как се създава `unmodifiable` колекция?", "answerOptions": [{ "text": "Чрез `new UnmodifiableList(myList)`.", "isCorrect": false }, { "text": "Чрез `List.of(\"a\", \"b\", \"c\")`.", "isCorrect": false }, { "text": "Чрез `Collections.unmodifiableList(myList)`.", "isCorrect": true }, { "text": "Чрез `myList.setUnmodifiable(true)`.", "isCorrect": false }], "hint": "Потърсете статичен метод в помощния клас `Collections`." },
+                // Q58
+                { "questionNumber": 58, "question": "Какво ще се случи, ако се опитате да извикате `add()` върху `unmodifiable` списък?", "answerOptions": [{ "text": "Операцията ще бъде тихо игнорирана.", "isCorrect": false }, { "text": "Ще бъде хвърлено `UnsupportedOperationException`.", "isCorrect": true }, { "text": "Ще се получи грешка при компилация.", "isCorrect": false }, { "text": "Ще бъде създадено копие на списъка и елементът ще бъде добавен в него.", "isCorrect": false }], "hint": "Помислете как колекцията може да сигнализира, че дадена операция не е \"поддържана\"." },
+                // Q59
+                { "questionNumber": 59, "question": "Кое от следните НЕ е свойство на `immutable` колекциите, създадени с `List.of()`?", "answerOptions": [{ "text": "Използват по-малко памет.", "isCorrect": false }, { "text": "Не могат да съдържат `null` елементи.", "isCorrect": false }, { "text": "Могат да бъдат променяни, ако се променят елементите в тях.", "isCorrect": true }, { "text": "Гарантирано са непроменими след създаването си.", "isCorrect": false }], "hint": "Помислете за разликата между промяна на самата колекция (добавяне/премахване на елементи) и промяна на състоянието на елементите вътре в нея." },
+                // Q60
+                { "questionNumber": 60, "question": "Кой метод от `Collections` намира най-малкия елемент в една колекция?", "answerOptions": [{ "text": "findMin()", "isCorrect": false }, { "text": "first()", "isCorrect": false }, { "text": "min()", "isCorrect": true }, { "text": "smallest()", "isCorrect": false }], "hint": "Методът е кръстен с най-краткото възможно име за \"минимум\"." },
+                // Q61
+                { "questionNumber": 61, "question": "Кой интерфейс трябва да имплементира класът на обектите в една колекция, за да може `Collections.max()` да работи без допълнителен `Comparator`?", "answerOptions": [{ "text": "Serializable", "isCorrect": false }, { "text": "Cloneable", "isCorrect": false }, { "text": "Iterable", "isCorrect": false }, { "text": "Comparable", "isCorrect": true }], "hint": "Кой интерфейс отговаря на въпроса \"Как този обект се сравнява с друг от същия тип?\"" },
+                // Q62
+                { "questionNumber": 62, "question": "За какво служи методът `Collections.frequency(c, o)`?", "answerOptions": [{ "text": "Намира първия индекс на обекта `o` в колекцията `c`.", "isCorrect": false }, { "text": "Проверява дали обектът `o` се среща често в колекцията `c`.", "isCorrect": false }, { "text": "Преброява и връща колко пъти обектът `o` се среща в колекцията `c`.", "isCorrect": true }, { "text": "Премахва всички срещания на обекта `o` от колекцията `c`.", "isCorrect": false }], "hint": "Името на метода е английската дума за \"честота\"." },
+                // Q63
+                { "questionNumber": 63, "question": "Коя от следните колекции НЕ наследява интерфейса `Collection`?", "answerOptions": [{ "text": "List", "isCorrect": false }, { "text": "Set", "isCorrect": false }, { "text": "Map", "isCorrect": true }, { "text": "Queue", "isCorrect": false }], "hint": "Коя структура се занимава с двойки от елементи, а не с единични елементи?" },
+                // Q64
+                { "questionNumber": 64, "question": "Каква е основната разлика между `Vector` и `ArrayList`?", "answerOptions": [{ "text": "`Vector` е по-бърз.", "isCorrect": false }, { "text": "Методите на `Vector` са `synchronized`, което го прави безопасен за използване в многонишкова среда.", "isCorrect": true }, { "text": "`ArrayList` може да съдържа `null`, а `Vector` не може.", "isCorrect": false }, { "text": "`Vector` има динамичен размер, а `ArrayList` има фиксиран.", "isCorrect": false }], "hint": "Помислете за предизвикателствата при работа с данни в среда с много нишки (threads)." },
+                // Q65
+                { "questionNumber": 65, "question": "Коя от изброените имплементации има най-бързи `add` и `contains` операции средно?", "answerOptions": [{ "text": "ArrayList", "isCorrect": false }, { "text": "LinkedList", "isCorrect": false }, { "text": "TreeSet", "isCorrect": false }, { "text": "HashSet", "isCorrect": true }], "hint": "Коя структура от данни позволява почти моментално намиране на елемент, като изчислява неговата позиция?" },
+                // Q66
+                { "questionNumber": 66, "question": "Ако имате `List<String> list` и искате да го сортирате в обратен азбучен ред, кой израз е правилен?", "answerOptions": [{ "text": "Collections.sort(list, reverse)", "isCorrect": false }, { "text": "list.sort(Collections.reverse())", "isCorrect": false }, { "text": "Collections.sort(list, Collections.reverseOrder())", "isCorrect": true }, { "text": "Collections.reverseSort(list)", "isCorrect": false }], "hint": "Трябва ви `Comparator` за обратен ред. Как се казва помощният метод, който го предоставя?" },
+                // Q67
+                { "questionNumber": 67, "question": "Коя специализирана имплементация на `Set` е високо оптимизирана за работа само с `enum` типове?", "answerOptions": [{ "text": "HashSet", "isCorrect": false }, { "text": "TreeSet", "isCorrect": false }, { "text": "EnumSet", "isCorrect": true }, { "text": "LinkedHashSet", "isCorrect": false }], "hint": "Името на класа директно указва за какъв тип данни е предназначен." },
+                // Q68
+                { "questionNumber": 68, "question": "Кой метод от `Collections` разменя местата на два елемента в списък, зададени с техните индекси?", "answerOptions": [{ "text": "exchange(list, i, j)", "isCorrect": false }, { "text": "swap(list, i, j)", "isCorrect": true }, { "text": "trade(list, i, j)", "isCorrect": false }, { "text": "move(list, i, j)", "isCorrect": false }], "hint": "Помислете за английската дума за \"размяна\"." },
+                // Q69
+                { "questionNumber": 69, "question": "Ако имате `SequencedMap<K,V> map`, как най-лесно ще вземете стойността, асоциирана с последния ключ?", "answerOptions": [{ "text": "map.values().getLast()", "isCorrect": false }, { "text": "map.lastEntry().getValue()", "isCorrect": true }, { "text": "map.get(map.size() - 1)", "isCorrect": false }, { "text": "map.sequencedValues().get(map.size() - 1)", "isCorrect": false }], "hint": "Използвайте метода, който връща последния запис, и след това вземете неговата стойност." },
+                // Q70
+                { "questionNumber": 70, "question": "Кое е вярно за сложността на обхождане с итератор в `HashSet`?", "answerOptions": [{ "text": "O(1)", "isCorrect": false }, { "text": "O(n), където n е броят на елементите.", "isCorrect": false }, { "text": "O(h/n), където h е капацитетът, а n е броят на елементите.", "isCorrect": true }, { "text": "O(log n)", "isCorrect": false }], "hint": "Помислете дали итераторът трябва да премине и през празните \"кофички\" на хеш таблицата." },
+                // Q71
+                { "questionNumber": 71, "question": "Какво е предназначението на `ArrayDeque`?", "answerOptions": [{ "text": "Да съхранява елементи в сортиран ред.", "isCorrect": false }, { "text": "Да осигури `List` имплементация, която е синхронизирана.", "isCorrect": false }, { "text": "Да предостави ефективна имплементация на двупосочна опашка (Deque), подходяща за опашки и стекове.", "isCorrect": true }, { "text": "Да свързва елементи чрез референции за бързо добавяне в средата.", "isCorrect": false }], "hint": "Разшифровайте името на класа: `Array Double Ended Queue`." },
+                // Q72
+                { "questionNumber": 72, "question": "Кой е основният недостатък на `LinkedList` спрямо `ArrayList`?", "answerOptions": [{ "text": "Бавно добавяне на елементи в края.", "isCorrect": false }, { "text": "Голям разход на памет.", "isCorrect": true }, { "text": "Бавен достъп до елемент по произволен индекс.", "isCorrect": true }, { "text": "Бавно премахване на елементи от началото.", "isCorrect": false }], "hint": "Помислете как бихте намерили 1000-ния елемент в списък, където всеки елемент знае само за своя съсед." },
+                // Q73
+                { "questionNumber": 73, "question": "Какво се случва с `SequencedMap`, когато извикате `putFirst(K, V)` с ключ, който вече съществува?", "answerOptions": [{ "text": "Стойността се обновява, но позицията на двойката не се променя.", "isCorrect": false }, { "text": "Операцията се игнорира.", "isCorrect": false }, { "text": "Двойката се премества в началото на мапа и старата стойност се заменя с новата.", "isCorrect": true }, { "text": "Хвърля се изключение за дублиран ключ.", "isCorrect": false }], "hint": "Поведението е аналогично на `addFirst` в `SequencedSet`." },
+                // Q74
+                { "questionNumber": 74, "question": "Коя от следните групови операции (bulk operations) ще остави в текущата колекция само елементите, които се намират и в друга, подадена колекция?", "answerOptions": [{ "text": "addAll(c)", "isCorrect": false }, { "text": "removeAll(c)", "isCorrect": false }, { "text": "containsAll(c)", "isCorrect": false }, { "text": "retainAll(c)", "isCorrect": true }], "hint": "Потърсете метода, чието име означава \"запази\"." },
+                // Q75
+                { "questionNumber": 75, "question": "Защо `Map` не наследява `Iterable`?", "answerOptions": [{ "text": "Защото е по-стара структура от данни.", "isCorrect": false }, { "text": "Защото не е ясно какво точно да се обхожда - ключовете, стойностите или двойките.", "isCorrect": true }, { "text": "Защото обхождането на `Map` е много бавно.", "isCorrect": false }, { "text": "Защото `Map` не може да се използва във `for-each` цикъл.", "isCorrect": false }], "hint": "Ако напишете `for (element : myMap)`, какво би представлявал `element`?" }
+            ]
+        };
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const totalQuestions = quizData.questions.length;
+
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const nextButton = document.getElementById('next-button');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsArea = document.getElementById('results-area');
+        const questionArea = document.getElementById('question-area');
+        const quizFooter = document.getElementById('quiz-footer');
+        const scoreTextEl = document.getElementById('score-text');
+        const scorePercentageEl = document.getElementById('score-percentage');
+        const restartButton = document.getElementById('restart-button');
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsArea.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            quizFooter.classList.remove('hidden');
+            nextButton.classList.add('hidden');
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            feedbackTextEl.innerHTML = '&nbsp;';
+            nextButton.classList.add('hidden');
+            
+            const currentQuestion = quizData.questions[currentQuestionIndex];
+            
+            // Update progress
+            const progress = ((currentQuestionIndex) / totalQuestions) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `Въпрос ${currentQuestionIndex + 1} от ${totalQuestions}`;
+
+            questionTextEl.innerHTML = currentQuestion.question; // Use innerHTML to render code tags
+            optionsContainerEl.innerHTML = '';
+
+            currentQuestion.answerOptions.forEach((option) => {
+                const button = document.createElement('button');
+                button.innerHTML = option.text;
+                button.classList.add('quiz-option', 'w-full', 'text-left', 'p-4', 'border', 'border-slate-300', 'rounded-lg', 'bg-slate-50', 'hover:bg-indigo-100', 'hover:border-indigo-400');
+                button.dataset.correct = option.isCorrect;
+                button.addEventListener('click', selectAnswer);
+                optionsContainerEl.appendChild(button);
+            });
+        }
+        
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const isCorrect = selectedButton.dataset.correct === 'true';
+
+            if (isCorrect) {
+                score++;
+                feedbackTextEl.textContent = 'Правилно!';
+                feedbackTextEl.style.color = '#10B981';
+            } else {
+                feedbackTextEl.textContent = 'Грешен отговор!';
+                feedbackTextEl.style.color = '#EF4444';
+            }
+
+            Array.from(optionsContainerEl.children).forEach(button => {
+                if (button.dataset.correct === 'true') {
+                    button.classList.add('correct');
+                } else if (button === selectedButton) {
+                    button.classList.add('incorrect');
+                }
+                button.classList.add('disabled-option');
+            });
+            
+            if(currentQuestionIndex < totalQuestions -1){
+                nextButton.classList.remove('hidden');
+            } else {
+                 showResults();
+            }
+        }
+        
+        function showNextQuestion() {
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+        
+        function showResults(){
+            questionArea.classList.add('hidden');
+            quizFooter.classList.add('hidden');
+            resultsArea.classList.remove('hidden');
+            const percentage = Math.round((score / totalQuestions) * 100);
+            scoreTextEl.textContent = `Вашият резултат: ${score}/${totalQuestions}`;
+            scorePercentageEl.textContent = `Успеваемост: ${percentage}%`;
+            
+            const progress = 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `Тестът е завършен!`;
+
+        }
+
+        nextButton.addEventListener('click', showNextQuestion);
+        restartButton.addEventListener('click', startQuiz);
+
+        // Initial load
+        startQuiz();
+
+    </script>
+</body>
+</html>

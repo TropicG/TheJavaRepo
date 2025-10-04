@@ -1,7 +1,5 @@
 
-import comparators.Car;
-import comparators.CarByNameComparator;
-import comparators.CarByTopSpeedDescComparator;
+package comparator;
 
 import java.sql.SQLOutput;
 import java.util.*;
