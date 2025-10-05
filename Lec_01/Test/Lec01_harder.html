@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивен тест по Java - Предизвикателство</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .answer-option {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .answer-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .selected {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #22c55e !important; /* green-500 */
+            color: #15803d; /* green-700 */
+        }
+        .incorrect {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #ef4444 !important; /* red-500 */
+            color: #b91c1c; /* red-700 */
+        }
+    </style>
+     <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center p-4">
+
+    <div id="quiz-container" class="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10 transition-all duration-500">
+        
+        <div id="quiz-header" class="mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">Тест по Java - Предизвикателство</h1>
+            <div id="progress-bar-container" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">Въпрос 1 от 30</p>
+        </div>
+
+        <div id="question-area">
+            <h2 id="question-text" class="text-xl sm:text-2xl font-semibold mb-6 min-h-[80px]">Зареждане на въпрос...</h2>
+            <div id="answer-options" class="flex flex-col space-y-4">
+                <!-- Answer options will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <div id="feedback-area" class="mt-6 p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 min-h-[100px]" style="display: none;">
+            <h3 class="font-bold text-lg mb-2">Обяснение:</h3>
+            <p id="rationale-text"></p>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <button id="next-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none" disabled>Провери</button>
+        </div>
+
+        <div id="results-screen" class="text-center" style="display: none;">
+            <h2 class="text-3xl font-bold mb-4">Тестът приключи!</h2>
+            <p class="text-xl mb-6">Вашият резултат е:</p>
+            <p id="score-text" class="text-5xl font-extrabold text-blue-600 mb-8"></p>
+            <button id="restart-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Започни отначало</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+    {
+        "questionNumber": 1,
+        "question": "Какво ще отпечата следният код: String s1 = \"Test\"; String s2 = new String(\"Test\"); String s3 = s2.intern(); System.out.println(s1 == s3);",
+        "answerOptions": [
+            { "text": "true", "rationale": "Методът `intern()` връща референция към низа от String pool-a. Тъй като `s1` също е в пула, референциите им стават еднакви.", "isCorrect": true },
+            { "text": "false", "rationale": "Въпреки че съдържанието е еднакво, `intern()` променя референцията на `s3` да сочи към обекта в String pool-a, където е и `s1`.", "isCorrect": false },
+            { "text": "Грешка при компилация", "rationale": "Кодът е напълно валиден и демонстрира работата на String pool-a.", "isCorrect": false },
+            { "text": "Грешка по време на изпълнение", "rationale": "Не възниква грешка; `intern()` е стандартен метод на класа `String`.", "isCorrect": false }
+        ],
+        "hint": "Помислете какво точно прави методът `intern()` и къде се намират `s1` и `s2` в паметта."
+    },
+    {
+        "questionNumber": 2,
+        "question": "Какъв ще бъде резултатът от следния код: Integer a = 128; Integer b = 128; System.out.println(a == b);",
+        "answerOptions": [
+            { "text": "true", "rationale": "Това би било вярно за стойности между -128 и 127 поради кеширането на `Integer` обекти, но 128 е извън този обхват.", "isCorrect": false },
+            { "text": "false", "rationale": "Java кешира `Integer` обекти само за стойности от -128 до 127. За 128 се създават два различни обекта в паметта, затова `==` връща `false`.", "isCorrect": true },
+            { "text": "Грешка при компилация", "rationale": "Кодът е валиден и използва autoboxing.", "isCorrect": false },
+            { "text": "Зависи от JVM", "rationale": "Въпреки че детайлите по имплементацията могат да варират, спецификацията на езика гарантира кеширане в този обхват, правейки резултата предвидим.", "isCorrect": false }
+        ],
+        "hint": "Има ли специален механизъм за оптимизация при autoboxing на малки цели числа?"
+    },
+    {
+        "questionNumber": 3,
+        "question": "Защо следният код няма да се компилира: byte b = 10; b = b * 2;",
+        "answerOptions": [
+            { "text": "Защото `b*2` надхвърля максималната стойност за `byte`.", "rationale": "Резултатът (20) е в обхвата на `byte`. Проблемът е в типа на самия израз.", "isCorrect": false },
+            { "text": "Защото резултатът от аритметична операция с `byte` се преобразува до `int`.", "rationale": "В Java всички целочислени аритметични операции с типове по-малки от `int` се преобразуват до `int`. Резултатът `int` не може да се присвои на `byte` без изричен cast (`b = (byte)(b*2);`).", "isCorrect": true },
+            { "text": "Защото `b` трябва да е `final`.", "rationale": "Ключовата дума `final` би попречила на присвояването, но липсата ѝ не е причината за грешката.", "isCorrect": false },
+            { "text": "Защото не може да се умножава `byte` с `int`.", "rationale": "Може, като `byte` се преобразува имплицитно до `int` преди операцията.", "isCorrect": false }
+        ],
+        "hint": "Какъв е типът на израза `b * 2` според правилата за numeric promotion в Java?"
+    },
+    {
+        "questionNumber": 4,
+        "question": "Какво ще се случи при изпълнението на: Integer i = null; int j = i;",
+        "answerOptions": [
+            { "text": "`j` ще получи стойност 0.", "rationale": "JVM не присвоява стойност по подразбиране в този случай; опитът за достъп до стойността на `null` обект причинява проблем.", "isCorrect": false },
+            { "text": "Кодът няма да се компилира.", "rationale": "Синтактично кодът е валиден, тъй като unboxing е позволена операция. Проблемът възниква по време на изпълнение.", "isCorrect": false },
+            { "text": "Ще бъде хвърлен `NullPointerException`.", "rationale": "Когато JVM се опита да направи unboxing (да извика `i.intValue()`), за да присвои стойността на `j`, тя се сблъсква с `null` референция, което води до `NullPointerException`.", "isCorrect": true },
+            { "text": "`j` ще получи стойност `null`.", "rationale": "Примитивният тип `int` не може да има стойност `null`.", "isCorrect": false }
+        ],
+        "hint": "Какво се опитва да направи JVM, за да преобразува `Integer` в `int` (unboxing)?"
+    },
+    {
+        "questionNumber": 5,
+        "question": "Кое от следните НЕ е валидна употреба на ключовата дума `var`?",
+        "answerOptions": [
+            { "text": "Като параметър на метод: `public void myMethod(var name) {}`", "rationale": "`var` не може да се използва за деклариране на параметри на методи, член-променливи на клас или тип на връщана стойност.", "isCorrect": true },
+            { "text": "В `for-each` цикъл: `for(var user : userList) {}`", "rationale": "Това е валидна и често срещана употреба на `var`.", "isCorrect": false },
+            { "text": "За деклариране на локална променлива: `var message = \"Hello\";`", "rationale": "Това е основното предназначение на `var` - за локални променливи с изведен тип.", "isCorrect": false },
+            { "text": "В `try-with-resources`: `try (var reader = new FileReader(\"f.txt\")) {}`", "rationale": "Това също е валидна употреба, при която типът се извежда от инициализацията.", "isCorrect": false }
+        ],
+        "hint": "`var` е предназначена само за локални променливи, чийто тип може да бъде определен веднага от компилатора."
+    },
+    {
+        "questionNumber": 6,
+        "question": "Какво ще отпечата следният switch ИЗРАЗ: int result = switch(2) { case 1 -> 10; case 2 -> { yield 20; } default -> 30; }; System.out.println(result);",
+        "answerOptions": [
+            { "text": "10", "rationale": "Стойността на израза е 2, така че ще се изпълни вторият `case`.", "isCorrect": false },
+            { "text": "20", "rationale": "За стойност 2 съвпада `case 2`. В блок със стрелка, `yield` се използва за връщане на стойност от `switch` израза.", "isCorrect": true },
+            { "text": "30", "rationale": "`default` клонът се изпълнява само ако никой друг `case` не съвпадне.", "isCorrect": false },
+            { "text": "Грешка при компилация", "rationale": "Това е валиден синтаксис за `switch` израз, въведен в Java 14.", "isCorrect": false }
+        ],
+        "hint": "Как се връща стойност от блок с код (`{}`) в `switch` израз?"
+    },
+    {
+        "questionNumber": 7,
+        "question": "Какъв е резултатът от сравнението: `new Integer(10) == new Integer(10)`?",
+        "answerOptions": [
+            { "text": "true", "rationale": "Операторът `==` сравнява референциите, а `new` винаги създава нов обект с нов адрес в паметта.", "isCorrect": false },
+            { "text": "false", "rationale": "Тъй като се използва `new` и за двата обекта, те се намират на различни адреси в паметта. `==` сравнява тези адреси, а не стойностите.", "isCorrect": true },
+            { "text": "Зависи от кеша на Integer.", "rationale": "Кешът на `Integer` работи при autoboxing (`Integer a = 10;`), но не и при изрично създаване с `new`.", "isCorrect": false },
+            { "text": "Тази конструкция е deprecated.", "rationale": "Въпреки че конструкторът `new Integer()` е deprecated от Java 9, кодът все още се компилира и работи предвидимо.", "isCorrect": false }
+        ],
+        "hint": "Какво прави операторът `new` и какво сравнява операторът `==` при референтни типове?"
+    },
+    {
+        "questionNumber": 8,
+        "question": "Каква е разликата между капацитет (capacity) и дължина (length) на `StringBuilder`?",
+        "answerOptions": [
+            { "text": "Няма разлика, те са синоними.", "rationale": "Това са две различни и важни характеристики на `StringBuilder`.", "isCorrect": false },
+            { "text": "Дължината е колко символа са използвани, а капацитетът е колко памет е заделена.", "rationale": "`length()` връща броя на символите в момента, докато `capacity()` връща колко символа може да съхранява вътрешният масив, преди да се наложи преоразмеряване.", "isCorrect": true },
+            { "text": "Капацитетът е винаги два пъти по-голям от дължината.", "rationale": "Капацитетът расте динамично, но не следва това просто правило.", "isCorrect": false },
+            { "text": "Дължината е в байтове, а капацитетът е в брой символи.", "rationale": "И двете се измерват в брой символи (`char`).", "isCorrect": false }
+        ],
+        "hint": "Помислете за `StringBuilder` като за масив от символи, който може да расте. Как бихте описали колко е пълен и колко голям е всъщност?"
+    },
+    {
+        "questionNumber": 9,
+        "question": "Какво ще се случи при опит за компилация и изпълнение на: `long num = 3000000000;`?",
+        "answerOptions": [
+            { "text": "Успешна компилация, `num` ще има стойност 3 милиарда.", "rationale": "Числовият литерал `3000000000` е твърде голям, за да се побере в `int`, който е типът по подразбиране.", "isCorrect": false },
+            { "text": "Грешка при компилация, защото числото е твърде голямо за `int` литерал.", "rationale": "По подразбиране компилаторът третира целочислените литерали като `int`. 3 милиарда е извън обхвата на `int`. Трябва да се използва суфикс `L` (`3000000000L`).", "isCorrect": true },
+            { "text": "Успешна компилация, но препълване (overflow) по време на работа.", "rationale": "Проблемът се засича от компилатора още преди изпълнението.", "isCorrect": false },
+            { "text": "Числото ще бъде автоматично преобразувано до `double`.", "rationale": "Няма автоматично преобразуване към `double` без десетична запетая.", "isCorrect": false }
+        ],
+        "hint": "Какъв е типът по подразбиране на целочислен литерал като `123` в Java и как можем да го променим?"
+    },
+    {
+        "questionNumber": 10,
+        "question": "Кое твърдение за назъбени масиви (jagged arrays) е вярно?",
+        "answerOptions": [
+            { "text": "Всеки ред трябва да има еднаква дължина.", "rationale": "Това описва правоъгълен (rectangular) масив, а не назъбен.", "isCorrect": false },
+            { "text": "Те не могат да съдържат примитивни типове.", "rationale": "Назъбени масиви могат да се създават от всякакви типове данни, включително примитивни.", "isCorrect": false },
+            { "text": "Декларират се чрез `int[[]] a;`.", "rationale": "Синтаксисът за декларация е същият като за правоъгълни масиви: `int[][] a;`.", "isCorrect": false },
+            { "text": "Всеки ред е отделен масив и може да има различна дължина.", "rationale": "Основната характеристика на назъбените масиви е, че те са масиви от масиви, като всеки вътрешен масив може да бъде инициализиран с различен размер.", "isCorrect": true }
+        ],
+        "hint": "Спомнете си как се инициализира двумерен масив стъпка по стъпка."
+    },
+    {
+        "questionNumber": 11,
+        "question": "Какъв ще е резултатът от `(byte)300`?",
+        "answerOptions": [
+            { "text": "-128", "rationale": "Резултатът се получава от остатъка при деление на 300 на 256 (броя стойности в `byte`) и коригиране на знака. `300 % 256` е 44.", "isCorrect": false },
+            { "text": "255", "rationale": "Стойността 255 е извън обхвата на `byte` (-128 до 127).", "isCorrect": false },
+            { "text": "44", "rationale": "При преобразуване към `byte`, се взимат само последните 8 бита от `int` стойността. 300 е `...0001 0010 1100` в двоичен вид. Последните 8 бита са `0010 1100`, което е 44.", "isCorrect": true },
+            { "text": "Грешка при компилация", "rationale": "Експлицитното преобразуване (cast) е валидна операция, дори ако води до загуба на данни.", "isCorrect": false }
+        ],
+        "hint": "`byte` е 8-битов тип. Какво се случва с по-големите битове на числото 300 при преобразуването?"
+    },
+    {
+        "questionNumber": 12,
+        "question": "Какво ще отпечата следният код: `System.out.println(0.1 + 0.2 == 0.3);`?",
+        "answerOptions": [
+            { "text": "true", "rationale": "Това изглежда математически вярно, но поради начина, по който се представят числата с плаваща запетая в компютрите, резултатът от `0.1 + 0.2` не е точно `0.3`.", "isCorrect": false },
+            { "text": "false", "rationale": "Числата с плаваща запетая (float/double) имат проблеми с точността. Резултатът от `0.1 + 0.2` е много близък, но не е идентичен с `0.3`, което води до `false` при сравнение.", "isCorrect": true },
+            { "text": "Грешка при компилация", "rationale": "Кодът е синтактично валиден.", "isCorrect": false },
+            { "text": "Понякога true, понякога false.", "rationale": "Резултатът е детерминистичен и винаги ще бъде `false` съгласно стандарта за изчисления с плаваща запетая IEEE 754.", "isCorrect": false }
+        ],
+        "hint": "Имат ли `double` и `float` перфектна точност за представяне на всички десетични дроби?"
+    },
+    {
+        "questionNumber": 13,
+        "question": "Кой от изброените е най-добрият начин да се сравнят два двумерни масива `int[][] a` и `int[][] b` за еднаквост на съдържанието?",
+        "answerOptions": [
+            { "text": "`a == b`", "rationale": "Това сравнява само референциите към външните масиви.", "isCorrect": false },
+            { "text": "`Arrays.equals(a, b)`", "rationale": "`Arrays.equals` работи коректно за едномерни масиви, но при двумерни той ще сравни референциите на вътрешните масиви, което не е желаното поведение.", "isCorrect": false },
+            { "text": "`Arrays.deepEquals(a, b)`", "rationale": "Методът `deepEquals` е специално създаден за рекурсивно сравнение на съдържанието на многомерни масиви.", "isCorrect": true },
+            { "text": "Цикъл, който сравнява `a[i] == b[i]`.", "rationale": "Това отново ще сравни референциите на вътрешните масиви, а не тяхното съдържание.", "isCorrect": false }
+        ],
+        "hint": "Търсим метод, който може да се справи със сравнение на \"дълбочина\"."
+    },
+    {
+        "questionNumber": 14,
+        "question": "Кой е резултатът от следния код: `String[] arr = \"a,b,c,\".split(\",\"); System.out.println(arr.length);`",
+        "answerOptions": [
+            { "text": "3", "rationale": "Въпреки че има запетая накрая, `split` създава празен низ след нея, който се запазва.", "isCorrect": false },
+            { "text": "4", "rationale": "`split` създава празен низ за съдържанието след последната запетая. По подразбиране, празните низове в края не се премахват.", "isCorrect": true },
+            { "text": "Грешка по време на изпълнение", "rationale": "Методът `split` работи коректно с такъв вход.", "isCorrect": false },
+            { "text": "5", "rationale": "Резултатът е 4 (`\"a\"`, `\"b\"`, `\"c\"`, `\"\"`), а не 5.", "isCorrect": false }
+        ],
+        "hint": "Какво прави методът `split` със съдържанието след последния разделител?"
+    },
+    {
+        "questionNumber": 15,
+        "question": "Какво е предназначението на `default` метод в интерфейс (въведен в Java 8)?",
+        "answerOptions": [
+            { "text": "Предоставя стойност по подразбиране за променливи в интерфейса.", "rationale": "Интерфейсите могат да имат константи, но не и променливи със стойност по подразбиране.", "isCorrect": false },
+            { "text": "Изпълнява се, ако никой друг метод в класа не бъде извикан.", "rationale": "Това не описва функцията на `default` методите.", "isCorrect": false },
+            { "text": "Позволява добавяне на нови методи към интерфейс с имплементация, без да се \"счупят\" съществуващите класове.", "rationale": "`default` методите предоставят имплементация по подразбиране, която класовете могат да използват или да предефинират, осигурявайки обратна съвместимост.", "isCorrect": true },
+            { "text": "Маркира метод, който е задължителен за имплементация.", "rationale": "Точно обратното, той предоставя имплементация, правейки предефинирането незадължително.", "isCorrect": false }
+        ],
+        "hint": "Как може да се добави нова функционалност към стар интерфейс, без да се налага промяна във всички класове, които го имплементират?"
+    },
+    {
+        "questionNumber": 16,
+        "question": "Ако `s` е `null`, какво ще се случи при `switch(s)` с pattern matching (Java 21)?",
+        "answerOptions": [
+            { "text": "Ще съвпадне с `default` клона.", "rationale": "Преди Java 21 `switch` с `null` би хвърлил `NullPointerException`. Сега има специален `case null`.", "isCorrect": false },
+            { "text": "Ще бъде хвърлен `NullPointerException`.", "rationale": "Това беше поведението в по-стари версии. Java 21 променя това, като позволява обработката на `null`.", "isCorrect": true },
+            { "text": "Ще съвпадне с `case null` клона, ако има такъв.", "rationale": "В Java 21, за да се обработи `null` в `switch`, трябва изрично да се добави `case null`. Ако такъв липсва, се хвърля `NullPointerException`.", "isCorrect": false },
+            { "text": "Кодът няма да се компилира.", "rationale": "Синтаксисът е валиден, но поведението по време на работа е специфично.", "isCorrect": false }
+        ],
+        "hint": "Как се обработват `null` стойности в традиционния `switch` и има ли промяна в модерните версии?"
+    },
+    {
+        "questionNumber": 17,
+        "question": "Каква е разликата между `&&` (short-circuit) и `&` (logical) операторите?",
+        "answerOptions": [
+            { "text": "`&` е по-бърз, защото винаги изчислява и двете страни.", "rationale": "Това, че изчислява и двете страни, го прави потенциално по-бавен.", "isCorrect": false },
+            { "text": "Няма разлика, те са напълно взаимозаменяеми.", "rationale": "Имат ключова разлика в поведението, която може да доведе до различни резултати или грешки.", "isCorrect": false },
+            { "text": "`&&` не изчислява втория операнд, ако резултатът е ясен от първия.", "rationale": "Ако първият операнд при `&&` е `false`, вторият не се изчислява изобщо. Това е полезно за избягване на грешки като `if (obj != null && obj.doSomething())`.", "isCorrect": true },
+            { "text": "`&` работи само с `boolean`, а `&&` работи с всякакви типове.", "rationale": "И двата логически оператора работят с `boolean` операнди. `&` има и битова версия за цели числа.", "isCorrect": false }
+        ],
+        "hint": "Какво ще се случи в израза `(x != 0) && (10 / x > 1)`, ако `x` е 0?"
+    },
+    {
+        "questionNumber": 18,
+        "question": "Кое от следните твърдения за `final` променливи е НЕВЯРНО?",
+        "answerOptions": [
+            { "text": "`final` примитивна променлива не може да променя стойността си.", "rationale": "Това е вярно. Веднъж инициализирана, стойността на `final` примитив е константна.", "isCorrect": false },
+            { "text": "`final` референтна променлива не може да сочи към друг обект.", "rationale": "Това е вярно. Референцията е константна, но състоянието на самия обект може да се променя.", "isCorrect": false },
+            { "text": "Обектът, към който сочи `final` референция, става immutable.", "rationale": "Това е невярно. `final` засяга само референцията, не и обекта. Можете да извиквате методи, които променят състоянието на обекта (напр. `final List l = ...; l.add(...)`).", "isCorrect": true },
+            { "text": "`final` променлива трябва да бъде инициализирана точно веднъж.", "rationale": "Това е вярно, или при декларация, или в конструктора (за член-променливи).", "isCorrect": false }
+        ],
+        "hint": "Какво точно прави `final` константно - референцията или самия обект?"
+    },
+    {
+        "questionNumber": 19,
+        "question": "Каква ще е стойността на `dayType` след изпълнението: `String dayType = switch (\"SUNDAY\") { case \"SATURDAY\", \"SUNDAY\" -> \"Weekend\"; case \"MONDAY\" -> \"Weekday\"; default -> \"Unknown\"; };`",
+        "answerOptions": [
+            { "text": "\"Weekend\"", "rationale": "Стойността \"SUNDAY\" съвпада с втория етикет в първия `case`, така че целият `switch` израз връща стойността \"Weekend\".", "isCorrect": true },
+            { "text": "\"Weekday\"", "rationale": "Този `case` не съвпада.", "isCorrect": false },
+            { "text": "\"Unknown\"", "rationale": "`default` се изпълнява само ако няма друго съвпадение.", "isCorrect": false },
+            { "text": "Грешка при компилация", "rationale": "Това е валиден `switch` израз, който използва групиране на `case` етикети.", "isCorrect": false }
+        ],
+        "hint": "Могат ли няколко `case` етикета да водят до един и същи резултат в модерен `switch`?"
+    },
+    {
+        "questionNumber": 20,
+        "question": "Къде в паметта се съхраняват локалните примитивни променливи (като `int x = 5;` в метод)?",
+        "answerOptions": [
+            { "text": "В Heap паметта.", "rationale": "Heap паметта се използва за съхранение на обекти, създадени с `new`.", "isCorrect": false },
+            { "text": "В String Pool-а.", "rationale": "String Pool е специализирана част от Heap-а само за низови литерали.", "isCorrect": false },
+            { "text": "В стека (Stack).", "rationale": "Стекът се използва за управление на извикванията на методи. Всяко извикване създава \"рамка\" (frame) в стека, където се съхраняват неговите локални променливи и параметри.", "isCorrect": true },
+            { "text": "В Metaspace.", "rationale": "Metaspace съхранява метаданни за класовете, а не локални променливи.", "isCorrect": false }
+        ],
+        "hint": "Коя част от паметта е свързана с последователността на извикване на методите?"
+    },
+    {
+        "questionNumber": 21,
+        "question": "Какво ще отпечата следният код, ако се изпълни с `java MyProgram hello world`? `public static void main(String... args) { System.out.println(args.length); }`",
+        "answerOptions": [
+            { "text": "0", "rationale": "Аргументите от командния ред се подават в `args` масива.", "isCorrect": false },
+            { "text": "1", "rationale": "Масивът ще съдържа два елемента: \"hello\" и \"world\".", "isCorrect": false },
+            { "text": "2", "rationale": "Програмата получава два аргумента от командния ред (\"hello\" и \"world\"), така че дължината на масива `args` ще бъде 2.", "isCorrect": true },
+            { "text": "3", "rationale": "Името на програмата не се брои като аргумент в Java.", "isCorrect": false }
+        ],
+        "hint": "Синтаксисът `String... args` е еквивалентен на `String[] args`. Как се броят думите, разделени с интервал, в командния ред?"
+    },
+    {
+        "questionNumber": 22,
+        "question": "Кое твърдение за `do-while` цикъл е винаги вярно?",
+        "answerOptions": [
+            { "text": "Тялото на цикъла се изпълнява точно веднъж.", "rationale": "Изпълнява се *поне* веднъж, може и повече пъти.", "isCorrect": false },
+            { "text": "Ако условието е `false` отначало, тялото няма да се изпълни.", "rationale": "Това е вярно за `while` цикъл, но не и за `do-while`.", "isCorrect": false },
+            { "text": "Променливите, декларирани в тялото му, са видими извън цикъла.", "rationale": "Променливите имат обхват само вътре в блока, в който са декларирани.", "isCorrect": false },
+            { "text": "Тялото на цикъла се изпълнява поне веднъж.", "rationale": "Условието се проверява в края на итерацията, което гарантира, че тялото ще се изпълни поне веднъж, дори ако условието е `false`.", "isCorrect": true }
+        ],
+        "hint": "Къде се намира проверката на условието - преди или след тялото на цикъла?"
+    },
+    {
+        "questionNumber": 23,
+        "question": "Кое от следните присвоявания е невалидно?",
+        "answerOptions": [
+            { "text": "int i = 100;", "rationale": "Това е стандартно и валидно присвояване.", "isCorrect": false },
+            { "text": "long l = 100;", "rationale": "`int` литерал може да се присвои на `long` променлива (имплицитно преобразуване).", "isCorrect": false },
+            { "text": "float f = 100.0;", "rationale": "Литералът `100.0` е от тип `double` по подразбиране и не може да се присвои на `float` без изричен cast или `F` суфикс.", "isCorrect": true },
+            { "text": "double d = 100;", "rationale": "`int` литерал може да се присвои на `double` променлива (имплицитно преобразуване).", "isCorrect": false }
+        ],
+        "hint": "Какъв е типът по подразбиране на литерал с десетична запетая като `3.14`?"
+    },
+    {
+        "questionNumber": 24,
+        "question": "Какъв е резултатът от `\"test\".equals(null)`?",
+        "answerOptions": [
+            { "text": "true", "rationale": "Съдържанието не е еднакво.", "isCorrect": false },
+            { "text": "false", "rationale": "Методът `equals` на `String` е имплементиран така, че да проверява за `null` и да връща `false` в този случай, без да хвърля грешка.", "isCorrect": true },
+            { "text": "Грешка при компилация", "rationale": "Кодът е валиден.", "isCorrect": false },
+            { "text": "`NullPointerException`", "rationale": "Грешка би възникнала при `null.equals(\"test\")`, но не и в този ред.", "isCorrect": false }
+        ],
+        "hint": "Как бихте написали безопасен `equals` метод, който да работи и с `null` стойности?"
+    },
+    {
+        "questionNumber": 25,
+        "question": "Кое от следните е референтен тип?",
+        "answerOptions": [
+            { "text": "int[]", "rationale": "Масивите, дори и от примитивни типове, са обекти в Java и следователно са референтни типове.", "isCorrect": true },
+            { "text": "int", "rationale": "Това е класически примитивен тип.", "isCorrect": false },
+            { "text": "char", "rationale": "Това е примитивен тип.", "isCorrect": false },
+            { "text": "boolean", "rationale": "Това е примитивен тип.", "isCorrect": false }
+        ],
+        "hint": "Къде се съхраняват данните - директно в променливата или в обект в heap-а?"
+    },
+    {
+        "questionNumber": 26,
+        "question": "Коя е основната функция на JRE (Java Runtime Environment)?",
+        "answerOptions": [
+            { "text": "Да компилира Java код.", "rationale": "Компилацията е задача на JDK (Java Development Kit).", "isCorrect": false },
+            { "text": "Да предостави JVM и основни библиотеки за изпълнение на програми.", "rationale": "JRE е минималният пакет, необходим за стартиране на вече компилирани Java приложения на дадена машина.", "isCorrect": true },
+            { "text": "Да предоставя инструменти за дебъгване и профилиране.", "rationale": "Тези инструменти са част от JDK, а не от JRE.", "isCorrect": false },
+            { "text": "Да управлява изходния код на Java.", "rationale": "JRE работи с компилиран байткод, а не с изходен код.", "isCorrect": false }
+        ],
+        "hint": "Какво е необходимо на един потребител, който иска само да стартира `.jar` файл, без да разработва софтуер?"
+    },
+    {
+        "questionNumber": 27,
+        "question": "Какъв е резултатът от `Integer.valueOf(\"123\") == Integer.valueOf(\"123\")`?",
+        "answerOptions": [
+            { "text": "false", "rationale": "Поради кеширането на `Integer` обекти в обхвата [-128, 127], `valueOf` ще върне референция към един и същ обект и за двете извиквания.", "isCorrect": false },
+            { "text": "true", "rationale": "Методът `valueOf` използва кеша за малки цели числа. Тъй като 123 е в обхвата [-128, 127], и двете извиквания връщат референция към един и същ кеширан обект.", "isCorrect": true },
+            { "text": "Грешка при компилация", "rationale": "Кодът е валиден.", "isCorrect": false },
+            { "text": "Зависи от версията на Java.", "rationale": "Това поведение е дефинирано в спецификацията на езика и е последователно.", "isCorrect": false }
+        ],
+        "hint": "Използва ли `Integer.valueOf()` същия механизъм за кеширане като autoboxing?"
+    },
+    {
+        "questionNumber": 28,
+        "question": "Как може да се създаде `String` обект, който със сигурност е в Heap паметта, а не в String Pool?",
+        "answerOptions": [
+            { "text": "Чрез използване на `var s = \"text\";`", "rationale": "Това е низов литерал и ще използва String Pool.", "isCorrect": false },
+            { "text": "Чрез `String s = \"text\".intern();`", "rationale": "Методът `intern()` изрично работи със String Pool.", "isCorrect": false },
+            { "text": "Чрез `String s = new String(\"text\");`", "rationale": "Операторът `new` винаги създава нов обект в Heap паметта, заобикаляйки String Pool.", "isCorrect": true },
+            { "text": "Невъзможно е, всички низове са в String Pool.", "rationale": "Програмистът има контрол върху това къде да се създаде обектът.", "isCorrect": false }
+        ],
+        "hint": "Коя ключова дума в Java винаги е свързана със създаването на нови обекти в динамичната памет?"
+    },
+    {
+        "questionNumber": 29,
+        "question": "Какво ще отпечата следният код: `int i = 1; System.out.println(i++ + ++i);`",
+        "answerOptions": [
+            { "text": "2", "rationale": "Това не отчита правилно и двата инкрементиращи оператора.", "isCorrect": false },
+            { "text": "3", "rationale": "Пост-инкрементът (`i++`) използва стойността преди увеличението, докато пре-инкрементът (`++i`) използва стойността след увеличението.", "isCorrect": false },
+            { "text": "4", "rationale": "Изразът се изчислява така: `i++` връща 1 (и `i` става 2). След това `++i` увеличава `i` до 3 и връща 3. Резултатът е `1 + 3 = 4`.", "isCorrect": true },
+            { "text": "5", "rationale": "Изчислението е `1 + 3`, а не `2 + 3`.", "isCorrect": false }
+        ],
+        "hint": "Каква е разликата между пост-инкремент (`x++`) и пре-инкремент (`++x`) по отношение на стойността, която връщат в един израз?"
+    },
+    {
+        "questionNumber": 30,
+        "question": "Какъв е резултатът от `(-5) % 2` в Java?",
+        "answerOptions": [
+            { "text": "1", "rationale": "Знакът на резултата от операцията остатък в Java е същият като знака на делимото.", "isCorrect": false },
+            { "text": "-1", "rationale": "Операцията остатък (`%`) в Java може да върне отрицателен резултат. `(-5) % 2` е -1, защото `-5 = (-2 * 2) - 1`.", "isCorrect": true },
+            { "text": "2.5", "rationale": "Операторът `%` връща остатък от целочислено деление, а не резултат с плаваща запетая.", "isCorrect": false },
+            { "text": "-2.5", "rationale": "Това е резултат от деление, а не остатък.", "isCorrect": false }
+        ],
+        "hint": "За разлика от математическата дефиниция за модул, операторът `%` в Java може да върне отрицателен резултат. Чий знак следва резултатът?"
+    }
+]
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let answerChecked = false;
+
+        const questionTextEl = document.getElementById('question-text');
+        const answerOptionsEl = document.getElementById('answer-options');
+        const nextButton = document.getElementById('next-button');
+        const feedbackAreaEl = document.getElementById('feedback-area');
+        const rationaleTextEl = document.getElementById('rationale-text');
+        const resultsScreenEl = document.getElementById('results-screen');
+        const scoreTextEl = document.getElementById('score-text');
+        const restartButton = document.getElementById('restart-button');
+        const quizHeaderEl = document.getElementById('quiz-header');
+        const questionAreaEl = document.getElementById('question-area');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+
+        function displayQuestion() {
+            answerChecked = false;
+            selectedAnswer = null;
+            feedbackAreaEl.style.display = 'none';
+
+            const question = quizData[currentQuestionIndex];
+            questionTextEl.textContent = question.question;
+            answerOptionsEl.innerHTML = '';
+            
+            question.answerOptions.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'answer-option p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600';
+                optionElement.textContent = option.text;
+                optionElement.dataset.index = index;
+                optionElement.addEventListener('click', selectAnswer);
+                answerOptionsEl.appendChild(optionElement);
+            });
+
+            nextButton.textContent = 'Провери';
+            nextButton.disabled = true;
+            updateProgress();
+        }
+
+        function selectAnswer(event) {
+            if (answerChecked) return;
+
+            const allOptions = document.querySelectorAll('.answer-option');
+            allOptions.forEach(opt => opt.classList.remove('selected'));
+
+            event.target.classList.add('selected');
+            selectedAnswer = event.target;
+            nextButton.disabled = false;
+        }
+
+        function checkAnswer() {
+            answerChecked = true;
+            const selectedIndex = selectedAnswer.dataset.index;
+            const question = quizData[currentQuestionIndex];
+            const correctOption = question.answerOptions.find(opt => opt.isCorrect);
+            const correctIndex = question.answerOptions.indexOf(correctOption);
+
+            const allOptions = document.querySelectorAll('.answer-option');
+            allOptions.forEach((opt, index) => {
+                opt.style.cursor = 'default';
+                if (index == correctIndex) {
+                    opt.classList.add('correct');
+                }
+            });
+
+            if (selectedIndex == correctIndex) {
+                score++;
+                selectedAnswer.classList.add('correct');
+                rationaleTextEl.textContent = question.answerOptions[selectedIndex].rationale;
+            } else {
+                selectedAnswer.classList.add('incorrect');
+                rationaleTextEl.textContent = question.answerOptions[selectedIndex].rationale;
+            }
+
+            feedbackAreaEl.style.display = 'block';
+            
+            if (currentQuestionIndex < quizData.length - 1) {
+                nextButton.textContent = 'Следващ въпрос';
+            } else {
+                nextButton.textContent = 'Виж резултати';
+            }
+        }
+        
+        function handleNextButtonClick() {
+            if (!answerChecked) {
+                checkAnswer();
+            } else {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizData.length) {
+                    displayQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+        
+        function showResults() {
+            quizHeaderEl.style.display = 'none';
+            questionAreaEl.style.display = 'none';
+            feedbackAreaEl.style.display = 'none';
+            nextButton.style.display = 'none';
+            resultsScreenEl.style.display = 'block';
+            scoreTextEl.textContent = `${score} / ${quizData.length}`;
+        }
+        
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsScreenEl.style.display = 'none';
+            quizHeaderEl.style.display = 'block';
+            questionAreaEl.style.display = 'block';
+            nextButton.style.display = 'block';
+            displayQuestion();
+        }
+
+        function updateProgress() {
+            const progressPercentage = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `Въпрос ${currentQuestionIndex + 1} от ${quizData.length}`;
+        }
+
+        nextButton.addEventListener('click', handleNextButtonClick);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Start the quiz
+        displayQuestion();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивен тест по Java - Лекция 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .answer-option {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .answer-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .selected {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #22c55e !important; /* green-500 */
+            color: #15803d; /* green-700 */
+        }
+        .incorrect {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #ef4444 !important; /* red-500 */
+            color: #b91c1c; /* red-700 */
+        }
+    </style>
+     <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center p-4">
+
+    <div id="quiz-container" class="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10 transition-all duration-500">
+        
+        <div id="quiz-header" class="mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">Тест по Java - Лекция 1</h1>
+            <div id="progress-bar-container" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">Въпрос 1 от 50</p>
+        </div>
+
+        <div id="question-area">
+            <h2 id="question-text" class="text-xl sm:text-2xl font-semibold mb-6 min-h-[80px]">Зареждане на въпрос...</h2>
+            <div id="answer-options" class="flex flex-col space-y-4">
+                <!-- Answer options will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <div id="feedback-area" class="mt-6 p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 min-h-[100px]" style="display: none;">
+            <h3 class="font-bold text-lg mb-2">Обяснение:</h3>
+            <p id="rationale-text"></p>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <button id="next-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none" disabled>Провери</button>
+        </div>
+
+        <div id="results-screen" class="text-center" style="display: none;">
+            <h2 class="text-3xl font-bold mb-4">Тестът приключи!</h2>
+            <p class="text-xl mb-6">Вашият резултат е:</p>
+            <p id="score-text" class="text-5xl font-extrabold text-blue-600 mb-8"></p>
+            <button id="restart-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Започни отначало</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+    {
+      "questionNumber": 1,
+      "question": "Какво е основното предназначение на Java виртуалната машина (JVM)?",
+      "answerOptions": [
+        {
+          "text": "Да компилира .java файлове в .class файлове.",
+          "rationale": "Това е задачата на Java компилатора (javac), а не на JVM.",
+          "isCorrect": false
+        },
+        {
+          "text": "Да предоставя среда за изпълнение на Java програми, независимо от операционната система.",
+          "rationale": "JVM интерпретира байткода и го превежда на езика на конкретната машина, което позволява платформена независимост.",
+          "isCorrect": true
+        },
+        {
+          "text": "Да предоставя библиотеки и инструменти за разработка.",
+          "rationale": "Библиотеките и инструментите за разработка са част от JDK (Java Development Kit).",
+          "isCorrect": false
+        },
+        {
+          "text": "Да управлява паметта на операционната система.",
+          "rationale": "JVM управлява паметта само за Java приложението, не за цялата операционна система.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 2,
+      "question": "Каква е разликата между JDK и JRE?",
+      "answerOptions": [
+        {
+          "text": "Няма разлика, те са едно и също нещо.",
+          "rationale": "Това е невярно. JDK и JRE имат различни компоненти и цели.",
+          "isCorrect": false
+        },
+        {
+          "text": "JRE включва компилатор, а JDK не.",
+          "rationale": "Точно обратното е вярно. JDK е за разработка и съдържа компилатора.",
+          "isCorrect": false
+        },
+        {
+          "text": "JDK включва JRE, компилатор и инструменти за разработка, докато JRE съдържа само JVM и библиотеки за изпълнение.",
+          "rationale": "JDK (Java Development Kit) е пълен пакет за разработка, докато JRE (Java Runtime Environment) е необходим само за изпълнение на вече компилирани Java програми.",
+          "isCorrect": true
+        },
+        {
+          "text": "JDK е само за Windows, а JRE е за всички операционни системи.",
+          "rationale": "И JDK, и JRE са налични за различни операционни системи.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 3,
+      "question": "Кое твърдение за Java НЕ е вярно?",
+      "answerOptions": [
+        {
+          "text": "Java е статично типизиран език.",
+          "rationale": "Това е вярно. Типът на всяка променлива трябва да бъде деклариран преди употреба.",
+          "isCorrect": false
+        },
+        {
+          "text": "Java има автоматично управление на паметта (Garbage Collector).",
+          "rationale": "Това е вярно и е една от ключовите характеристики на езика.",
+          "isCorrect": false
+        },
+        {
+          "text": "Java програмите се компилират директно до машинен код.",
+          "rationale": "Java кодът първо се компилира до междинен байткод, който след това се интерпретира от JVM. Това е ключът към платформената независимост.",
+          "isCorrect": true
+        },
+        {
+          "text": "Синтаксисът на Java е подобен на C/C++.",
+          "rationale": "Това е вярно, което улеснява програмисти с опит в тези езици.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 4,
+      "question": "Какво представлява JIT (Just-In-Time) компилацията в контекста на JVM?",
+      "answerOptions": [
+        {
+          "text": "Процес, при който целият байткод се компилира до машинен код преди стартиране на програмата.",
+          "rationale": "Това описва Ahead-Of-Time (AOT) компилация, а не JIT.",
+          "isCorrect": false
+        },
+        {
+          "text": "Процес, при който JVM анализира байткода по време на изпълнение и компилира често използваните части директно в машинен код.",
+          "rationale": "Това е оптимизация, която значително ускорява изпълнението на Java програмите, като комбинира предимствата на интерпретацията и компилацията.",
+          "isCorrect": true
+        },
+        {
+          "text": "Процес на превод на .java файлове в байткод.",
+          "rationale": "Това е стандартната компилация, извършвана от `javac`, преди изпълнението.",
+          "isCorrect": false
+        },
+        {
+          "text": "Процес за автоматично изчистване на паметта.",
+          "rationale": "Това е работата на Garbage Collector, а не на JIT компилатора.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 5,
+      "question": "Кое от изброените е примитивен тип данни в Java?",
+      "answerOptions": [
+        {
+          "text": "String",
+          "rationale": "String е референтен тип (клас), а не примитивен.",
+          "isCorrect": false
+        },
+        {
+          "text": "Integer",
+          "rationale": "Integer е wrapper клас за примитивния тип int.",
+          "isCorrect": false
+        },
+        {
+          "text": "Array",
+          "rationale": "Масивите (Arrays) в Java са референтни типове.",
+          "isCorrect": false
+        },
+        {
+          "text": "char",
+          "rationale": "char се използва за съхранение на единични символи и е един от осемте примитивни типа в Java.",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "questionNumber": 6,
+      "question": "Каква ще бъде стойността на променливата 'result' след изпълнение на следния код: double result = 11 * 0.3;",
+      "answerOptions": [
+        {
+          "text": "3",
+          "rationale": "Резултатът от умножението е число с плаваща запетая, а не цяло число.",
+          "isCorrect": false
+        },
+        {
+          "text": "3.3",
+          "rationale": "Когато цяло число (int) се умножи по число с плаваща запетая (double), резултатът се преобразува имплицитно към double.",
+          "isCorrect": true
+        },
+        {
+          "text": "Грешка при компилация",
+          "rationale": "Няма грешка, тъй като имплицитното преобразуване от int към double е позволено и безопасно.",
+          "isCorrect": false
+        },
+        {
+          "text": "0",
+          "rationale": "Резултатът е близък до 3.3, а не 0.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 7,
+      "question": "Какво е autoboxing в Java?",
+      "answerOptions": [
+        {
+          "text": "Автоматичното преобразуване на wrapper клас в съответния му примитивен тип.",
+          "rationale": "Това описва процеса unboxing, а не autoboxing.",
+          "isCorrect": false
+        },
+        {
+          "text": "Ръчното създаване на обект от wrapper клас.",
+          "rationale": "Autoboxing е автоматичен процес, не ръчен.",
+          "isCorrect": false
+        },
+        {
+          "text": "Автоматичното преобразуване на примитивна стойност в съответния ѝ wrapper клас.",
+          "rationale": "Това позволява на програмиста да третира примитивни типове като обекти, когато е необходимо, без изрично създаване на инстанция.",
+          "isCorrect": true
+        },
+        {
+          "text": "Процес за опаковане на код в .jar файл.",
+          "rationale": "Това е свързано с пакетиране на приложения, а не с типове данни.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 8,
+      "question": "Защо String са immutable (непроменими) в Java?",
+      "answerOptions": [
+        {
+          "text": "За да се пести памет.",
+          "rationale": "Непроменимостта помага за ефективното използване на String pool, което пести памет, но това е следствие, а не основната причина.",
+          "isCorrect": false
+        },
+        {
+          "text": "Защото всяка промяна на низ създава нов обект в паметта, а оригиналният низ остава непроменен.",
+          "rationale": "Това описва *какво* се случва, но не и *защо*. Непроменимостта осигурява предвидимост, сигурност и възможност за безопасно споделяне на низове между различни части на програмата.",
+          "isCorrect": true
+        },
+        {
+          "text": "За да работят по-бързо.",
+          "rationale": "Създаването на нови обекти при всяка промяна всъщност може да бъде по-бавно. За бързи модификации се използва StringBuilder.",
+          "isCorrect": false
+        },
+        {
+          "text": "Защото са референтен тип.",
+          "rationale": "Много референтни типове са променими (mutable). Това, че е референтен тип, не го прави автоматично immutable.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 9,
+      "question": "Каква е разликата между създаването на String с литерал (String s1 = \"test\") и с оператора new (String s2 = new String(\"test\"))?",
+      "answerOptions": [
+        {
+          "text": "Няма никаква разлика, резултатът е идентичен.",
+          "rationale": "Има съществена разлика в начина, по който се управлява паметта за двата случая.",
+          "isCorrect": false
+        },
+        {
+          "text": "Създаването с `new` е по-бързо.",
+          "rationale": "Създаването с литерал може да е по-бързо, защото може да преизползва съществуващ обект от String pool.",
+          "isCorrect": false
+        },
+        {
+          "text": "С литерал низът се създава в String pool, докато с `new` винаги се създава нов обект в heap-a.",
+          "rationale": "Използването на литерал позволява на JVM да оптимизира паметта, като преизползва низове със същото съдържание. Операторът `new` изрично изисква създаването на нов обект извън пула.",
+          "isCorrect": true
+        },
+        {
+          "text": "С `new` низът е mutable, а с литерал е immutable.",
+          "rationale": "Всички String обекти в Java са immutable, независимо от начина на създаване.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 10,
+      "question": "Защо следният код няма да се компилира: var message = \"Hello\"; message = 123;",
+      "answerOptions": [
+        {
+          "text": "Защото `var` не може да се използва за String.",
+          "rationale": "`var` може да се използва за всеки тип, стига компилаторът да може да го определи от израза вдясно.",
+          "isCorrect": false
+        },
+        {
+          "text": "Типът на променливата, определен при декларацията (String), не може да бъде променян впоследствие.",
+          "rationale": "При `var message = \"Hello\";`, компилаторът определя типа на `message` като String. Java е статично типизиран език, така че не може да се присвои стойност от тип int на променлива от тип String.",
+          "isCorrect": true
+        },
+        {
+          "text": "Защото променливата `message` не е инициализирана.",
+          "rationale": "Променливата е инициализирана със стойност \"Hello\" на първия ред.",
+          "isCorrect": false
+        },
+        {
+          "text": "Защото числото 123 трябва да е в кавички.",
+          "rationale": "Ако беше в кавички (\"123\"), кодът щеше да се компилира, но това не обяснява защо в сегашния си вид не работи.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 11,
+      "question": "Какъв ще бъде резултатът от изпълнението на `System.out.println(\"123\" + 99);`",
+      "answerOptions": [
+        {
+          "text": "222",
+          "rationale": "Това би бил резултатът, ако и двете стойности бяха числа. Тук обаче имаме конкатенация на низ.",
+          "isCorrect": false
+        },
+        {
+          "text": "Грешка при компилация",
+          "rationale": "Този код е валиден. Операторът '+' е дефиниран за низ и число.",
+          "isCorrect": false
+        },
+        {
+          "text": "\"12399\"",
+          "rationale": "Когато един от операндите при оператор `+` е String, Java преобразува другия операнд в String и ги съединява (конкатенира).",
+          "isCorrect": true
+        },
+        {
+          "text": "\"123 99\"",
+          "rationale": "Конкатенацията се случва без добавяне на допълнителни символи като интервал.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 12,
+      "question": "Кой е предпочитаният начин за деклариране на масив в Java?",
+      "answerOptions": [
+        {
+          "text": "int a[];",
+          "rationale": "Този синтаксис е валиден (наследен от C/C++), но не е предпочитан, защото типът (`int[]`) не е изцяло отляво на името на променливата.",
+          "isCorrect": false
+        },
+        {
+          "text": "int[] a;",
+          "rationale": "Този синтаксис е предпочитан, защото ясно показва, че типът на променливата `a` е \"масив от int\" (`int[]`).",
+          "isCorrect": true
+        },
+        {
+          "text": "array<int> a;",
+          "rationale": "Този синтаксис не е валиден за деклариране на масиви в Java.",
+          "isCorrect": false
+        },
+        {
+          "text": "int a = new int[];",
+          "rationale": "Този код няма да се компилира, защото при инициализация трябва да се посочи размерът на масива.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 13,
+      "question": "Какво се случва, когато инициализирате масив от примитивни типове, например `int[] arr = new int[5];`",
+      "answerOptions": [
+        {
+          "text": "Масивът остава празен, докато не му се присвоят стойности.",
+          "rationale": "Паметта се заделя и елементите получават стойности по подразбиране веднага.",
+          "isCorrect": false
+        },
+        {
+          "text": "Всички елементи на масива се инициализират със стойността по подразбиране на техния тип (0 за int).",
+          "rationale": "При създаване на масив с `new`, Java автоматично инициализира елементите му. За `int` това е 0, за `boolean` е `false`, за референтни типове е `null`.",
+          "isCorrect": true
+        },
+        {
+          "text": "Получава се грешка при компилация, защото няма зададени стойности.",
+          "rationale": "Това е напълно валиден начин за инициализация на масив.",
+          "isCorrect": false
+        },
+        {
+          "text": "Елементите на масива съдържат случайни стойности.",
+          "rationale": "Java гарантира предвидимо поведение и инициализира елементите със стойности по подразбиране, а не със случайни данни.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 14,
+      "question": "Кой метод трябва да се използва за сравнение на съдържанието на два низа `s1` и `s2`?",
+      "answerOptions": [
+        {
+          "text": "s1 == s2",
+          "rationale": "Операторът `==` сравнява референциите (адресите в паметта) на обектите, а не тяхното съдържание.",
+          "isCorrect": false
+        },
+        {
+          "text": "s1.compare(s2)",
+          "rationale": "Класът String няма метод `compare`. Има метод `compareTo`, който връща цяло число, а не `boolean`.",
+          "isCorrect": false
+        },
+        {
+          "text": "s1.equals(s2)",
+          "rationale": "Методът `.equals()` е предназначен за сравнение на съдържанието на обекти и е правилният начин за проверка дали два низа са еднакви.",
+          "isCorrect": true
+        },
+        {
+          "text": "String.compare(s1, s2)",
+          "rationale": "Класът String няма статичен метод `compare`.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 15,
+      "question": "Кога бихте използвали `StringBuilder` вместо `String`?",
+      "answerOptions": [
+        {
+          "text": "Винаги, защото е по-нов и по-добър.",
+          "rationale": "`String` е напълно подходящ и дори предпочитан, когато низът няма да се променя.",
+          "isCorrect": false
+        },
+        {
+          "text": "Когато трябва да се извършват множество промени по един низ.",
+          "rationale": "`StringBuilder` е mutable (променим) и е много по-ефективен при множество модификации (като добавяне в цикъл), защото не създава нов обект при всяка промяна.",
+          "isCorrect": true
+        },
+        {
+          "text": "Когато низът трябва да се съхранява в String pool.",
+          "rationale": "`StringBuilder` обектите се създават в heap-а, не в String pool.",
+          "isCorrect": false
+        },
+        {
+          "text": "Когато се сравняват низове.",
+          "rationale": "За сравнение се използват методите на клас `String`.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 16,
+      "question": "Какво прави `break` операторът в `switch` конструкция?",
+      "answerOptions": [
+        {
+          "text": "Прекратява цялата програма.",
+          "rationale": "`break` прекратява само текущия блок (цикъл или switch), не цялата програма.",
+          "isCorrect": false
+        },
+        {
+          "text": "Пропуска текущия `case` и преминава към следващия.",
+          "rationale": "Това поведение се нарича \"fall-through\" и се случва, когато `break` липсва.",
+          "isCorrect": false
+        },
+        {
+          "text": "Излиза от `switch` блока и продължава изпълнението на кода след него.",
+          "rationale": "Това е основното предназначение на `break` в `switch` - да предотврати изпълнението на кода в следващите `case` блокове.",
+          "isCorrect": true
+        },
+        {
+          "text": "Връща стойност от `switch` израза.",
+          "rationale": "За връщане на стойност в по-новите версии на Java се използва `yield` или синтаксис със стрелка (`->`).",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 17,
+      "question": "Какъв е размерът в байтове на примитивния тип `long` в Java?",
+      "answerOptions": [
+        {
+          "text": "4 байта",
+          "rationale": "4 байта е размерът на `int` и `float`.",
+          "isCorrect": false
+        },
+        {
+          "text": "8 байта",
+          "rationale": "Типът `long`, който се използва за много големи цели числа, заема 8 байта в паметта.",
+          "isCorrect": true
+        },
+        {
+          "text": "2 байта",
+          "rationale": "2 байта е размерът на `short` и `char`.",
+          "isCorrect": false
+        },
+        {
+          "text": "Зависи от операционната система.",
+          "rationale": "Размерите на примитивните типове в Java са фиксирани и не зависят от платформата, което допринася за преносимостта на езика.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 18,
+      "question": "Кой метод превръща низ в масив от символи?",
+      "answerOptions": [
+        {
+          "text": "getChars()",
+          "rationale": "Метод с такова име съществува, но той има по-сложна употреба. Има по-директен начин.",
+          "isCorrect": false
+        },
+        {
+          "text": "toCharArray()",
+          "rationale": "Този метод връща нов масив от символи (`char[]`), който съдържа всички символи от низа.",
+          "isCorrect": true
+        },
+        {
+          "text": "split(\"\")",
+          "rationale": "Този метод ще върне масив от низове (`String[]`), всеки от които съдържа по един символ, а не масив от примитивния тип `char`.",
+          "isCorrect": false
+        },
+        {
+          "text": "toCharList()",
+          "rationale": "В стандартния клас String няма такъв метод.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 19,
+      "question": "Какъв е резултатът от `(int) 2.71`?",
+      "answerOptions": [
+        {
+          "text": "3",
+          "rationale": "Преобразуването към `int` не закръглява, а отрязва дробната част.",
+          "isCorrect": false
+        },
+        {
+          "text": "2.0",
+          "rationale": "Резултатът е от тип `int`, а не `double`.",
+          "isCorrect": false
+        },
+        {
+          "text": "2",
+          "rationale": "Експлицитното преобразуване (cast) от `double` към `int` премахва всичко след десетичната запетая, без да закръглява.",
+          "isCorrect": true
+        },
+        {
+          "text": "Грешка при изпълнение",
+          "rationale": "Това е валидна операция за преобразуване на типове.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 20,
+      "question": "От Java 21 насам, как може да се напише най-простата \"Hello, World!\" програма?",
+      "answerOptions": [
+        {
+          "text": "public static void main(String[] args) { System.out.println(\"Hello\"); }",
+          "rationale": "Това е класическият начин, но Java 21 въвежда по-опростен синтаксис за прости програми.",
+          "isCorrect": false
+        },
+        {
+          "text": "void main() { System.out.println(\"Hello\"); }",
+          "rationale": "За прости програми, които не се нуждаят от изрично дефиниран клас, този синтаксис е валиден и компилаторът автоматично създава клас.",
+          "isCorrect": true
+        },
+        {
+          "text": "function main() { print(\"Hello\"); }",
+          "rationale": "Това е синтаксис, характерен за други езици за програмиране, не за Java.",
+          "isCorrect": false
+        },
+        {
+          "text": "System.out.println(\"Hello\");",
+          "rationale": "Този код трябва да бъде в метод, за да бъде изпълнен.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 21,
+      "question": "Какъв литерал се използва за запис на число в шестнадесетична бройна система?",
+      "answerOptions": [
+        {
+          "text": "0b",
+          "rationale": "Този префикс се използва за двоична бройна система (binary).",
+          "isCorrect": false
+        },
+        {
+          "text": "0",
+          "rationale": "Този префикс се използва за осмична бройна система (octal).",
+          "isCorrect": false
+        },
+        {
+          "text": "0x",
+          "rationale": "Префиксът `0x` или `0X` се използва за означаване на шестнадесетични (hexadecimal) числа.",
+          "isCorrect": true
+        },
+        {
+          "text": "0h",
+          "rationale": "В Java не се използва такъв префикс за числови литерали.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 22,
+      "question": "Кой метод от wrapper класа `Integer` се използва за преобразуване на `String` в `int`?",
+      "answerOptions": [
+        {
+          "text": "intValue()",
+          "rationale": "Този метод извлича примитивната `int` стойност от `Integer` обект (unboxing), но не преобразува от низ.",
+          "isCorrect": false
+        },
+        {
+          "text": "valueOf(String)",
+          "rationale": "Този метод преобразува низ, но връща `Integer` обект, а не примитивния тип `int`.",
+          "isCorrect": false
+        },
+        {
+          "text": "parseInt(String)",
+          "rationale": "Това е статичен метод, който анализира (parse) подадения низ и връща съответната му стойност като примитивен тип `int`.",
+          "isCorrect": true
+        },
+        {
+          "text": "toInt(String)",
+          "rationale": "В класа `Integer` няма метод с такова име.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 23,
+      "question": "Каква е целта на `default` случая в `switch` оператора?",
+      "answerOptions": [
+        {
+          "text": "Да зададе стойност по подразбиране на променливата в `switch`.",
+          "rationale": "`default` не променя стойността на променливата, а предоставя алтернативен път на изпълнение.",
+          "isCorrect": false
+        },
+        {
+          "text": "Да изпълни блок код, ако никой от `case` етикетите не съвпада със стойността на израза.",
+          "rationale": "Това е еквивалентът на `else` блока в `if-else` конструкция и осигурява изпълнението на код, когато няма друго съвпадение.",
+          "isCorrect": true
+        },
+        {
+          "text": "Винаги се изпълнява, независимо от стойността.",
+          "rationale": "Изпълнява се само ако никой друг `case` не съвпадне.",
+          "isCorrect": false
+        },
+        {
+          "text": "Да прекрати изпълнението на `switch` оператора.",
+          "rationale": "За прекратяване на `switch` се използва `break`.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 24,
+      "question": "Как се декларира и инициализира двумерен масив (матрица) с размери 3x4?",
+      "answerOptions": [
+        {
+          "text": "int[3][4] a = new int[][];",
+          "rationale": "Размерите трябва да се посочат отдясно, при `new`, а не отляво.",
+          "isCorrect": false
+        },
+        {
+          "text": "int[][] a = new int[3][4];",
+          "rationale": "Този синтаксис правилно декларира променлива `a` от тип \"масив от масиви от int\" и заделя памет за 3 реда, всеки с по 4 колони.",
+          "isCorrect": true
+        },
+        {
+          "text": "int a[][] = new int(3,4);",
+          "rationale": "Синтаксисът за инициализация на масив използва квадратни скоби `[]`, а не кръгли `()`.",
+          "isCorrect": false
+        },
+        {
+          "text": "int a[3,4];",
+          "rationale": "Това не е валиден синтаксис за декларация и инициализация на масив в Java.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 25,
+      "question": "Кой метод от класа `Arrays` се използва за проверка дали два масива имат еднакво съдържание?",
+      "answerOptions": [
+        {
+          "text": "arr1.equals(arr2)",
+          "rationale": "Използването на `.equals()` директно върху масиви ще сравни техните референции, а не съдържанието им, което в повечето случаи не е желаното поведение.",
+          "isCorrect": false
+        },
+        {
+          "text": "Arrays.compare(arr1, arr2)",
+          "rationale": "Методът `compare` връща цяло число (по-малко, равно или по-голямо от нула), а не `boolean`.",
+          "isCorrect": false
+        },
+        {
+          "text": "Arrays.equals(arr1, arr2)",
+          "rationale": "Този статичен помощен метод сравнява елемент по елемент съдържанието на двата масива и връща `true`, ако те са еднакви.",
+          "isCorrect": true
+        },
+        {
+          "text": "arr1 == arr2",
+          "rationale": "Операторът `==` сравнява референциите, т.е. дали `arr1` и `arr2` сочат към един и същи обект в паметта.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 26,
+      "question": "Какво означава, че Java е език с общо предназначение?",
+      "answerOptions": [
+        {
+          "text": "Че е подходящ само за уеб приложения.",
+          "rationale": "Java се използва за уеб, но не само. Това би го направило език със специално предназначение.",
+          "isCorrect": false
+        },
+        {
+          "text": "Че може да се използва за разработка на различни видове приложения - уеб, мобилни, настолни, корпоративни.",
+          "rationale": "Това е дефиницията за език с общо предназначение - не е създаден за решаване на един-единствен, тесен проблем.",
+          "isCorrect": true
+        },
+        {
+          "text": "Че е лесен за научаване от всички.",
+          "rationale": "Въпреки че синтаксисът му е сравнително ясен, това не е техническото значение на термина.",
+          "isCorrect": false
+        },
+        {
+          "text": "Че работи на всички операционни системи.",
+          "rationale": "Това се отнася до платформената му независимост, което е различна характеристика.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 27,
+      "question": "Какво прави Garbage Collector-ът?",
+      "answerOptions": [
+        {
+          "text": "Намира и поправя грешки в кода.",
+          "rationale": "Това е задача на компилатора и инструментите за статичен анализ, а не на Garbage Collector.",
+          "isCorrect": false
+        },
+        {
+          "text": "Оптимизира скоростта на изпълнение на кода.",
+          "rationale": "Оптимизацията на скоростта е основна задача на JIT компилатора.",
+          "isCorrect": false
+        },
+        {
+          "text": "Автоматично намира и освобождава обекти в heap паметта, които вече не се използват.",
+          "rationale": "Това е ключова характеристика за автоматичното управление на паметта в Java, която предпазва от проблеми като изтичане на памет (memory leaks).",
+          "isCorrect": true
+        },
+        {
+          "text": "Компилира байткода до машинен код.",
+          "rationale": "Това се извършва от JIT компилатора в рамките на JVM.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 28,
+      "question": "Какво е unboxing?",
+      "answerOptions": [
+        {
+          "text": "Процесът на автоматично преобразуване на wrapper клас в съответния му примитивен тип.",
+          "rationale": "Това е обратното на autoboxing - \"разопаковане\" на стойността от обекта, за да се използва като примитивен тип.",
+          "isCorrect": true
+        },
+        {
+          "text": "Процесът на създаване на примитивна променлива.",
+          "rationale": "Това е стандартна декларация, а не unboxing.",
+          "isCorrect": false
+        },
+        {
+          "text": "Процесът на автоматично преобразуване на примитивна стойност в wrapper клас.",
+          "rationale": "Това е autoboxing.",
+          "isCorrect": false
+        },
+        {
+          "text": "Процесът на извличане на файл от архив.",
+          "rationale": "Терминът се използва в контекста на типовете данни в Java.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 29,
+      "question": "Защо кодът `var mystery;` няма да се компилира?",
+      "answerOptions": [
+        {
+          "text": "Защото `var` може да се използва само вътре в методи.",
+          "rationale": "Това е вярно, но не е основната причина за грешката в този конкретен ред.",
+          "isCorrect": false
+        },
+        {
+          "text": "Защото компилаторът не може да определи типа на променливата без инициализация.",
+          "rationale": "При използване на `var`, променливата трябва да бъде декларирана и инициализирана на един и същи ред, за да може компилаторът да изведе (infer) нейния тип от стойността вдясно.",
+          "isCorrect": true
+        },
+        {
+          "text": "Защото името `mystery` е запазена дума.",
+          "rationale": "`mystery` не е запазена дума в Java.",
+          "isCorrect": false
+        },
+        {
+          "text": "Защото липсва точка и запетая в края.",
+          "rationale": "Дори с точка и запетая (`var mystery;`), кодът пак няма да се компилира по същата причина.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 30,
+      "question": "Каква е основната роля на Java компилатора (javac)?",
+      "answerOptions": [
+        {
+          "text": "Да изпълнява Java програми.",
+          "rationale": "Изпълнението на програми е задача на Java виртуалната машина (JVM).",
+          "isCorrect": false
+        },
+        {
+          "text": "Да превежда Java сорс код (.java) в байткод (.class).",
+          "rationale": "Компилаторът е първата стъпка в процеса, като създава платформено независим байткод, който JVM може да разбере.",
+          "isCorrect": true
+        },
+        {
+          "text": "Да управлява паметта.",
+          "rationale": "Управлението на паметта се извършва от JVM по време на изпълнение.",
+          "isCorrect": false
+        },
+        {
+          "text": "Да намира логически грешки в програмата.",
+          "rationale": "Компилаторът намира синтактични грешки, но не може да открие всички логически грешки.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 31,
+      "question": "Какво представлява `String[] args` в `public static void main(String[] args)`?",
+      "answerOptions": [
+        {
+          "text": "Масив от низове, който съдържа аргументи, подадени на програмата от командния ред.",
+          "rationale": "Това позволява на програмата да приема входни данни при стартирането си.",
+          "isCorrect": true
+        },
+        {
+          "text": "Списък с всички променливи в програмата.",
+          "rationale": "Това е параметър на метода `main`, а не списък с променливи.",
+          "isCorrect": false
+        },
+        {
+          "text": "Конфигурационни настройки на JVM.",
+          "rationale": "Конфигурациите на JVM се задават по друг начин, не през този параметър.",
+          "isCorrect": false
+        },
+        {
+          "text": "Задължителен, но неизползван елемент от синтаксиса.",
+          "rationale": "Параметърът е напълно функционален и се използва за подаване на данни към приложението.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 32,
+      "question": "Кой от примитивните типове данни заема най-малко място в паметта?",
+      "answerOptions": [
+        {
+          "text": "short",
+          "rationale": "`short` заема 2 байта.",
+          "isCorrect": false
+        },
+        {
+          "text": "int",
+          "rationale": "`int` заема 4 байта.",
+          "isCorrect": false
+        },
+        {
+          "text": "char",
+          "rationale": "`char` заема 2 байта.",
+          "isCorrect": false
+        },
+        {
+          "text": "byte",
+          "rationale": "Типът `byte` заема само 1 байт и може да съхранява стойности от -128 до 127.",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "questionNumber": 33,
+      "question": "Какво е имплицитно конвертиране на типове?",
+      "answerOptions": [
+        {
+          "text": "Ръчно преобразуване с помощта на `(тип)`.",
+          "rationale": "Това е експлицитно конвертиране (casting).",
+          "isCorrect": false
+        },
+        {
+          "text": "Автоматичното конвертиране, което Java извършва, когато няма риск от загуба на данни.",
+          "rationale": "Това се случва например при присвояване на `int` към `long` или `float` към `double`.",
+          "isCorrect": true
+        },
+        {
+          "text": "Преобразуване на `String` в число.",
+          "rationale": "Това обикновено изисква изрично извикване на метод като `Integer.parseInt()`.",
+          "isCorrect": false
+        },
+        {
+          "text": "Грешка, която възниква при смесване на типове.",
+          "rationale": "Това не е грешка, а позволена и полезна функционалност на езика.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 34,
+      "question": "Как се записват низове на няколко реда (text blocks) в модерните версии на Java?",
+      "answerOptions": [
+        {
+          "text": "С единични кавички.",
+          "rationale": "Единичните кавички се използват за `char` литерали.",
+          "isCorrect": false
+        },
+        {
+          "text": "С двойни кавички и `\\n` за нов ред.",
+          "rationale": "Това е класическият начин, но има по-модерен и по-четлив вариант.",
+          "isCorrect": false
+        },
+        {
+          "text": "С тройни двойни кавички (`\"\"\"`).",
+          "rationale": "Този синтаксис, въведен в Java 15, позволява лесно създаване на многоредови низове без нужда от конкатенация или екраниращи символи за нов ред.",
+          "isCorrect": true
+        },
+        {
+          "text": "С `StringBuilder` и `append()`.",
+          "rationale": "Това е начин за построяване на низ, но не и синтаксис за литерал.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 35,
+      "question": "Какво ще се случи, ако се опитате да използвате локална променлива, преди да сте я инициализирали?",
+      "answerOptions": [
+        {
+          "text": "Ще получи стойност по подразбиране (0 или null).",
+          "rationale": "Стойности по подразбиране получават член-променливите на класове и елементите на масиви, но не и локалните променливи в методите.",
+          "isCorrect": false
+        },
+        {
+          "text": "Ще получите грешка при компилация.",
+          "rationale": "Java компилаторът е достатъчно интелигентен, за да засече, че променливата може да не е инициализирана, и предотвратява компилацията на такъв код.",
+          "isCorrect": true
+        },
+        {
+          "text": "Програмата ще се изпълни, но ще даде грешка по време на работа.",
+          "rationale": "Грешката се хваща на по-ранен етап - по време на компилация.",
+          "isCorrect": false
+        },
+        {
+          "text": "Ще приеме случайна стойност от паметта.",
+          "rationale": "Java е проектиран да бъде сигурен език и не позволява такъв тип непредсказуемо поведение.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 36,
+      "question": "Каква е основната разлика между `while` и `do-while` цикъл?",
+      "answerOptions": [
+        {
+          "text": "Няма разлика, те са взаимозаменяеми.",
+          "rationale": "Имат ключова разлика в поведението си.",
+          "isCorrect": false
+        },
+        {
+          "text": "`while` цикълът се изпълнява поне веднъж.",
+          "rationale": "Точно обратното е вярно.",
+          "isCorrect": false
+        },
+        {
+          "text": "`do-while` цикълът се изпълнява поне веднъж.",
+          "rationale": "При `do-while` проверката на условието се случва *след* изпълнението на тялото на цикъла, което гарантира поне едно изпълнение.",
+          "isCorrect": true
+        },
+        {
+          "text": "`do-while` е по-бърз от `while`.",
+          "rationale": "Няма значителна разлика в производителността; изборът зависи от логиката на задачата.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 37,
+      "question": "Какво позволява `Pattern matching` функционалността в `switch` (от Java 21 насам)?",
+      "answerOptions": [
+        {
+          "text": "Да се използват регулярни изрази в `case` етикетите.",
+          "rationale": "Функционалността е свързана с типове данни, а не с регулярни изрази.",
+          "isCorrect": false
+        },
+        {
+          "text": "Да се проверява типа на подадената променлива и да се създаде нова променлива от този тип.",
+          "rationale": "Това позволява много по-чист и безопасен код при работа с различни типове обекти, като премахва нуждата от изрично преобразуване (cast).",
+          "isCorrect": true
+        },
+        {
+          "text": "Да се сравняват само числови стойности.",
+          "rationale": "Новата функционалност разширява `switch` далеч отвъд сравняването само на прости стойности.",
+          "isCorrect": false
+        },
+        {
+          "text": "Да се изпълняват няколко `case` блока едновременно.",
+          "rationale": "Целта е да се избере и изпълни точно един блок код.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 38,
+      "question": "Каква е стойността по подразбиране на елемент в масив, деклариран като `boolean[]`?",
+      "answerOptions": [
+        {
+          "text": "true",
+          "rationale": "Стойността по подразбиране е `false`.",
+          "isCorrect": false
+        },
+        {
+          "text": "false",
+          "rationale": "Както при числовите типове, които получават 0, `boolean` получава своята \"нулева\" или начална стойност, която е `false`.",
+          "isCorrect": true
+        },
+        {
+          "text": "null",
+          "rationale": "`null` е стойността по подразбиране за референтни типове, а `boolean` е примитивен тип.",
+          "isCorrect": false
+        },
+        {
+          "text": "Няма стойност по подразбиране.",
+          "rationale": "Всички елементи на масив винаги се инициализират със стойност по подразбиране.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 39,
+      "question": "Кой метод от класа `Arrays` се използва за запълване на цял масив с една и съща стойност?",
+      "answerOptions": [
+        {
+          "text": "Arrays.copy()",
+          "rationale": "Методи за копиране съществуват, но те не запълват масива.",
+          "isCorrect": false
+        },
+        {
+          "text": "Arrays.toString()",
+          "rationale": "Този метод превръща масива в низ за отпечатване.",
+          "isCorrect": false
+        },
+        {
+          "text": "Arrays.fill()",
+          "rationale": "Името на метода (`fill` - запълвам) директно описва неговата функция.",
+          "isCorrect": true
+        },
+        {
+          "text": "Arrays.setAll()",
+          "rationale": "Метод `setAll` съществува, но той използва функция за генериране на стойност за всеки елемент, а не запълва с една и съща константна стойност.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 40,
+      "question": "Защо следната декларация на двумерен масив е валидна: `double[][] matrix = new double[7][];`?",
+      "answerOptions": [
+        {
+          "text": "Защото Java автоматично създава и второто измерение с размер 7.",
+          "rationale": "Java не прави такова предположение; програмистът трябва да инициализира всеки ред поотделно.",
+          "isCorrect": false
+        },
+        {
+          "text": "Тя не е валидна и ще доведе до грешка при компилация.",
+          "rationale": "Декларацията е напълно валидна.",
+          "isCorrect": false
+        },
+        {
+          "text": "Защото позволява създаването на назъбен масив (jagged array), където всеки ред може да има различна дължина.",
+          "rationale": "Този синтаксис създава само масива от редове. След това всеки ред (който е отделен масив) може да бъде инициализиран с различен размер в цикъл.",
+          "isCorrect": true
+        },
+        {
+          "text": "Защото вторият размер се подразбира от типа `double`.",
+          "rationale": "Размерът на масива не зависи от типа на неговите елементи.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 41,
+      "question": "Какъв е резултатът от израза `11 * (int) 0.3`?",
+      "answerOptions": [
+        {
+          "text": "3.3",
+          "rationale": "Преобразуването към `int` се извършва първо, което променя резултата от умножението.",
+          "isCorrect": false
+        },
+        {
+          "text": "3",
+          "rationale": "Резултатът от `(int) 0.3` е 0, а не 3.",
+          "isCorrect": false
+        },
+        {
+          "text": "0",
+          "rationale": "Поради скобите, първо се изпълнява `(int) 0.3`, което дава 0. След това `11 * 0` е 0.",
+          "isCorrect": true
+        },
+        {
+          "text": "Грешка при компилация",
+          "rationale": "Изразът е синтактично правилен.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 42,
+      "question": "Коя е основната причина Java да е платформено независим език?",
+      "answerOptions": [
+        {
+          "text": "Синтаксисът, подобен на C++.",
+          "rationale": "Синтаксисът определя как се пише кодът, но не и как се изпълнява на различни машини.",
+          "isCorrect": false
+        },
+        {
+          "text": "Наличието на Garbage Collector.",
+          "rationale": "Управлението на паметта е важна характеристика, но не е пряко свързана с платформената независимост.",
+          "isCorrect": false
+        },
+        {
+          "text": "Използването на JVM, която изпълнява универсален байткод.",
+          "rationale": "Java кодът се компилира до байткод, а за всяка платформа има специфична JVM, която може да го изпълни. Това е същината на \"Write once, run anywhere\".",
+          "isCorrect": true
+        },
+        {
+          "text": "Това, че е статично типизиран.",
+          "rationale": "Статичното типизиране помага за откриване на грешки при компилация, но не осигурява работа на различни ОС.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 43,
+      "question": "Кое от изброените НЕ е примитивен тип в Java?",
+      "answerOptions": [
+        {
+          "text": "float",
+          "rationale": "`float` е примитивен тип за числа с плаваща запетая.",
+          "isCorrect": false
+        },
+        {
+          "text": "boolean",
+          "rationale": "`boolean` е примитивен тип за стойности `true` и `false`.",
+          "isCorrect": false
+        },
+        {
+          "text": "void",
+          "rationale": "Въпреки че `void` е ключова дума, свързана с типове (означава \"без тип\"), тя се използва за методи, които не връщат стойност, но не може да се използва за деклариране на променливи.",
+          "isCorrect": true
+        },
+        {
+          "text": "byte",
+          "rationale": "`byte` е примитивен целочислен тип.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 44,
+      "question": "Каква е ключовата разлика между примитивните и референтните типове по отношение на паметта?",
+      "answerOptions": [
+        {
+          "text": "Примитивните типове се съхраняват в heap-a, а референтните в String pool-a.",
+          "rationale": "Примитивните типове (локални променливи) обикновено се съхраняват в стека, а обектите (референтни типове) в хийпа.",
+          "isCorrect": false
+        },
+        {
+          "text": "Променливите от примитивен тип съдържат самата стойност, а тези от референтен тип - адрес към обект в паметта.",
+          "rationale": "Това е фундаменталната разлика. Присвояването на примитивни типове копира стойността, докато присвояването на референтни типове копира адреса (референцията).",
+          "isCorrect": true
+        },
+        {
+          "text": "Няма разлика, и двата вида се управляват еднакво от Garbage Collector-a.",
+          "rationale": "Garbage Collector-ът се занимава с обекти в хийпа (референтни типове), не с локални примитивни променливи в стека.",
+          "isCorrect": false
+        },
+        {
+          "text": "Референтните типове са по-бързи, защото сочат директно към паметта.",
+          "rationale": "Достъпът до примитивни типове обикновено е по-бърз, тъй като стойността е налична директно.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 45,
+      "question": "Кой е резултатът от `\"Firebird\".charAt(0)`?",
+      "answerOptions": [
+        {
+          "text": "\"F\"",
+          "rationale": "Методът връща `char`, а не `String`.",
+          "isCorrect": false
+        },
+        {
+          "text": "'F'",
+          "rationale": "Индексирането в Java започва от 0, така че `charAt(0)` връща първия символ от низа.",
+          "isCorrect": true
+        },
+        {
+          "text": "'d'",
+          "rationale": "Това е последният символ, не първият.",
+          "isCorrect": false
+        },
+        {
+          "text": "Грешка, защото индексите започват от 1.",
+          "rationale": "В Java, както и в много други езици, индексирането винаги започва от 0.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 46,
+      "question": "Кой метод ще използвате, за да разделите низа `\"apple,banana,orange\"` на масив от три елемента?",
+      "answerOptions": [
+        {
+          "text": "toCharArray()",
+          "rationale": "Това ще създаде масив от всички символи, включително запетаите.",
+          "isCorrect": false
+        },
+        {
+          "text": "split(\",\")",
+          "rationale": "Методът `split` разделя низа по подадения разделител (в случая запетая) и връща масив от получените части.",
+          "isCorrect": true
+        },
+        {
+          "text": "substring(0, 5)",
+          "rationale": "Това ще извлече само част от низа (\"apple\"), но няма да го раздели на масив.",
+          "isCorrect": false
+        },
+        {
+          "text": "tokenize()",
+          "rationale": "В класа `String` няма такъв метод. За токенизация се използва класът `StringTokenizer`, но `split` е по-модерен и удобен.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 47,
+      "question": "В цикъл `for(int i = 0; i < 5; i++)`, коя част представлява инициализацията?",
+      "answerOptions": [
+        {
+          "text": "i < 5",
+          "rationale": "Това е булевият израз или условието за продължаване на цикъла.",
+          "isCorrect": false
+        },
+        {
+          "text": "i++",
+          "rationale": "Това е стъпката (step), която се изпълнява след всяка итерация.",
+          "isCorrect": false
+        },
+        {
+          "text": "int i = 0",
+          "rationale": "Тази част се изпълнява само веднъж, в самото начало на цикъла, и декларира и задава начална стойност на променливата-брояч.",
+          "isCorrect": true
+        },
+        {
+          "text": "for",
+          "rationale": "`for` е ключовата дума, която дефинира типа на цикъла.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 48,
+      "question": "Какво е основното предимство на String pool-a?",
+      "answerOptions": [
+        {
+          "text": "Ускорява сравнението на низове с `equals()`.",
+          "rationale": "Сравнението с `equals()` работи независимо от пула. Пулът може да ускори сравнението с `==`, ако референциите са еднакви.",
+          "isCorrect": false
+        },
+        {
+          "text": "Прави низовете променими (mutable).",
+          "rationale": "Низовете в Java винаги са непроменими, независимо къде се съхраняват.",
+          "isCorrect": false
+        },
+        {
+          "text": "Пести памет чрез преизползване на низови литерали със същото съдържание.",
+          "rationale": "Като гарантира, че за всеки уникален низов литерал има само един обект в паметта, JVM избягва дублирането и намалява общата консумация на памет.",
+          "isCorrect": true
+        },
+        {
+          "text": "Улеснява работата на Garbage Collector-a.",
+          "rationale": "Въпреки че има връзка, основната цел не е улесняване на GC, а оптимизация на паметта.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 49,
+      "question": "Кой wrapper клас съответства на примитивния тип `char`?",
+      "answerOptions": [
+        {
+          "text": "Char",
+          "rationale": "Имената на wrapper класовете обикновено са с главна буква и пълното име на типа.",
+          "isCorrect": false
+        },
+        {
+          "text": "String",
+          "rationale": "`String` е клас за поредици от символи, а не за единичен символ.",
+          "isCorrect": false
+        },
+        {
+          "text": "Character",
+          "rationale": "Това е пълното име на класа, който обвива примитивната стойност от тип `char`.",
+          "isCorrect": true
+        },
+        {
+          "text": "C",
+          "rationale": "Това не е валиден клас в Java.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "questionNumber": 50,
+      "question": "Кой от следните оператори има най-висок приоритет?",
+      "answerOptions": [
+        {
+          "text": "=",
+          "rationale": "Операторът за присвояване има един от най-ниските приоритети.",
+          "isCorrect": false
+        },
+        {
+          "text": "()",
+          "rationale": "Скобите се използват за групиране на изрази и имат много висок приоритет, за да променят реда на изпълнение.",
+          "isCorrect": true
+        },
+        {
+          "text": "+",
+          "rationale": "Аритметичните оператори имат по-нисък приоритет от скобите.",
+          "isCorrect": false
+        },
+        {
+          "text": "==",
+          "rationale": "Операторите за сравнение имат по-нисък приоритет от аритметичните.",
+          "isCorrect": false
+        }
+      ]
+    }
+];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let answerChecked = false;
+
+        const questionTextEl = document.getElementById('question-text');
+        const answerOptionsEl = document.getElementById('answer-options');
+        const nextButton = document.getElementById('next-button');
+        const feedbackAreaEl = document.getElementById('feedback-area');
+        const rationaleTextEl = document.getElementById('rationale-text');
+        const resultsScreenEl = document.getElementById('results-screen');
+        const scoreTextEl = document.getElementById('score-text');
+        const restartButton = document.getElementById('restart-button');
+        const quizHeaderEl = document.getElementById('quiz-header');
+        const questionAreaEl = document.getElementById('question-area');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+
+        function displayQuestion() {
+            answerChecked = false;
+            selectedAnswer = null;
+            feedbackAreaEl.style.display = 'none';
+
+            const question = quizData[currentQuestionIndex];
+            questionTextEl.textContent = question.question;
+            answerOptionsEl.innerHTML = '';
+            
+            question.answerOptions.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'answer-option p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600';
+                optionElement.textContent = option.text;
+                optionElement.dataset.index = index;
+                optionElement.addEventListener('click', selectAnswer);
+                answerOptionsEl.appendChild(optionElement);
+            });
+
+            nextButton.textContent = 'Провери';
+            nextButton.disabled = true;
+            updateProgress();
+        }
+
+        function selectAnswer(event) {
+            if (answerChecked) return;
+
+            const allOptions = document.querySelectorAll('.answer-option');
+            allOptions.forEach(opt => opt.classList.remove('selected'));
+
+            event.target.classList.add('selected');
+            selectedAnswer = event.target;
+            nextButton.disabled = false;
+        }
+
+        function checkAnswer() {
+            answerChecked = true;
+            const selectedIndex = selectedAnswer.dataset.index;
+            const question = quizData[currentQuestionIndex];
+            const correctOption = question.answerOptions.find(opt => opt.isCorrect);
+            const correctIndex = question.answerOptions.indexOf(correctOption);
+
+            const allOptions = document.querySelectorAll('.answer-option');
+            allOptions.forEach((opt, index) => {
+                opt.style.cursor = 'default';
+                if (index == correctIndex) {
+                    opt.classList.add('correct');
+                }
+            });
+
+            if (selectedIndex == correctIndex) {
+                score++;
+                selectedAnswer.classList.add('correct');
+                rationaleTextEl.textContent = question.answerOptions[selectedIndex].rationale;
+            } else {
+                selectedAnswer.classList.add('incorrect');
+                rationaleTextEl.textContent = question.answerOptions[selectedIndex].rationale;
+            }
+
+            feedbackAreaEl.style.display = 'block';
+            
+            if (currentQuestionIndex < quizData.length - 1) {
+                nextButton.textContent = 'Следващ въпрос';
+            } else {
+                nextButton.textContent = 'Виж резултати';
+            }
+        }
+        
+        function handleNextButtonClick() {
+            if (!answerChecked) {
+                checkAnswer();
+            } else {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizData.length) {
+                    displayQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+        
+        function showResults() {
+            quizHeaderEl.style.display = 'none';
+            questionAreaEl.style.display = 'none';
+            feedbackAreaEl.style.display = 'none';
+            nextButton.style.display = 'none';
+            resultsScreenEl.style.display = 'block';
+            scoreTextEl.textContent = `${score} / ${quizData.length}`;
+        }
+        
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsScreenEl.style.display = 'none';
+            quizHeaderEl.style.display = 'block';
+            questionAreaEl.style.display = 'block';
+            nextButton.style.display = 'block';
+            displayQuestion();
+        }
+
+        function updateProgress() {
+            const progressPercentage = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `Въпрос ${currentQuestionIndex + 1} от ${quizData.length}`;
+        }
+
+        nextButton.addEventListener('click', handleNextButtonClick);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Start the quiz
+        displayQuestion();
+    </script>
+</body>
+</html>
