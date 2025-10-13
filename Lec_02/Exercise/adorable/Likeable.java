@@ -1,3 +1,3 @@
-interface likeable {
+interface Likeable {
     void like();
 }
