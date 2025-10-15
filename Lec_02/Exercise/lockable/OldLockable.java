@@ -1,4 +1,4 @@
-public interface OldLockable {
+Даpublic interface OldLockable {
     default boolean isLocked() {
         return true;
     }

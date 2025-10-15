@@ -10,16 +10,35 @@
 		1. Какви методи има в новия интефйес?
 		2. Какво трябва да направи един клас, ако реши да имплементира Adorable?
 		3. Ако класа е абстрактен и реши да имплементира Adorable какво ще стане с методите на Adorable в абстрания клас, ще трябва ли да се пишат наново?
-	- Да се създаде клас CoolPerson, който наследява Adorable 
+	- Да се създаде клас CoolPerson, който имплементира Adorable
+	
+* Задача 2 
+
+	Да се направи package lockable:
+	- Да се направи публичен интерфейс OldLockable:
+		1. Да има един default boolean метод isLocked() който връща return true;
 		
-	1
-	9
+	- Да се направи публичен интерфейс Lockable
+		1. има един деклариран метод void lock();
+		2. има един default boolean isLocked() метод, който да връща false 
+		3. има статичен метод, който e Lockable getInstance(boolean isDoor) и ако аргумента е true да върне нов Door обект, в противен случай Safe обект
+		4. да се отговори на въпроса какво означава static за един интерфейс 
 	
-	
-	2  3   5   8   13   21 
-	
-	20
-	32
+	- Да се направи публичен клас Door, който имплементира Lockable и OldLockable
+		1. Да се override-не метода lock
+		2. Да се override-не (и да се обясни защо) метода isLocked от интерфейсите Lockable и OldLockable
+		
+	- Да се направи публичен клас Safe, който имплементира Lockable и OldLockable
+		1. Да се override-не метода lock()
+		2. Да се override-не (и да се обясни защо) метода isLocked от интерфейсите Lockable и OldLockable
+		
+	- Да се направи публичен клас DefaultInterfaceExample
+		1. Създай Door door = new Door();
+		2. Създай Door обект с референция Lockable anotherDoor 
+		3. Създай Safe обект с референция Lockable safe
+		4. Да се извика anotherDoor.lock() и да се принтира стойността на safe.isLocked() и door.isLocked() (обясни кой метод защо се извиква)
+		5. Да се създаде Lockable loackable референция и да сочи към елемент върнат от Lockable.getInstance(true) и да се направи instanceof дали е Door и да се извика метода lock 
+		6. Да се присвои към Object someObject = new Safe(); и чрез cast-ване да се провери дали е Lockable и да се извика метода lock()
 	
 	
 	
