@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест по Java Generics (За напреднали)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .quiz-card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .answer-btn {
+            border: 1px solid #d1d5db;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s, transform 0.2s;
+            text-align: left;
+        }
+        .answer-btn:hover:not(:disabled) {
+            background-color: #f3f4f6; /* Lighter gray on hover */
+            border-color: #60a5fa; /* Blue border on hover */
+            transform: translateY(-2px);
+        }
+        .answer-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+        .correct {
+            background-color: #d1fae5 !important; /* Green-100 */
+            border-color: #10b981 !important; /* Green-500 */
+            color: #065f46; /* Green-800 */
+        }
+        .incorrect {
+            background-color: #fee2e2 !important; /* Red-100 */
+            border-color: #ef4444 !important; /* Red-500 */
+            color: #991b1b; /* Red-800 */
+        }
+        .rationale {
+            background-color: #f9fafb; /* Gray-50 */
+            border-left: 4px solid #60a5fa; /* Blue-400 */
+        }
+        .control-btn {
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+        /* Style for code snippets within questions */
+        pre {
+            background-color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+        code {
+           font-family: 'Courier New', Courier, monospace;
+           background-color: #e5e7eb;
+           padding: 2px 4px;
+           border-radius: 4px;
+           font-size: 0.9em;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div id="quiz-container" class="quiz-card w-full max-w-3xl p-6 md:p-8">
+        <div id="quiz-header" class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 text-center">Тест по Java Generics (За напреднали)</h1>
+            <div id="progress-container" class="mt-4 w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-center text-sm text-gray-500 mt-2">Въпрос 0 от 50</p>
+        </div>
+
+        <div id="question-area">
+            <h2 id="question-text" class="text-xl font-semibold text-gray-700 mb-6 min-h-[6rem]">Зареждане...</h2>
+            <div id="answer-buttons" class="grid grid-cols-1 gap-4">
+                <!-- Answer buttons will be generated here -->
+            </div>
+        </div>
+
+        <div id="rationale-container" class="mt-6 p-4 rounded-lg rationale hidden">
+            <p id="rationale-text" class="text-gray-700"></p>
+        </div>
+        
+        <div id="results-container" class="text-center hidden">
+            <h2 class="text-2xl font-bold text-gray-800">Тестът приключи!</h2>
+            <p id="score-text" class="text-4xl font-bold my-4 text-blue-600"></p>
+            <p id="score-message" class="text-lg text-gray-600 mb-6"></p>
+            <button id="restart-btn" class="control-btn bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600">
+                Започни отначало
+            </button>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <button id="next-btn" class="control-btn bg-gray-800 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-900 hidden">
+                Следващ въпрос
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = {
+    "questions": [
+        {
+            "questionNumber": 1,
+            "question": "Какво е \"bridge method\" (мостов метод) и защо компилаторът го генерира в контекста на generics?",
+            "answerOptions": [
+                {
+                    "text": "Това е метод, който свързва два генерични типа, за да позволи ковариантност.",
+                    "rationale": "Мостовите методи не са свързани с ковариантност, а с поддържане на полиморфизма след type erasure.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е синтетичен метод, генериран от компилатора, за да запази полиморфизма при наследяване на генерични типове след type erasure.",
+                    "rationale": "Това е точната дефиниция. Той 'моства' разликата между сигнатурата на метода в подкласа (конкретна) и тази в надкласа (обща, след type erasure).",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Това е метод, който ръчно се пише, за да се заобиколят ограниченията на type erasure.",
+                    "rationale": "Мостовите методи се генерират автоматично и невидимо от компилатора, не се пишат ръчно.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е метод, който позволява използването на примитивни типове в генерични класове.",
+                    "rationale": "Проблемът с примитивните типове се решава чрез autoboxing, а не чрез мостови методи.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете какво се случва, когато наследите генеричен клас и override-нете метод, чиято сигнатура се променя след type erasure."
+        },
+        {
+            "questionNumber": 2,
+            "question": "Какво е \"heap pollution\" (замърсяване на хийпа) и каква е връзката му с generics?",
+            "answerOptions": [
+                {
+                    "text": "Това е ситуация, при която Garbage Collector-ът не може да изчисти обекти от генерични колекции.",
+                    "rationale": "Heap pollution не пречи на работата на Garbage Collector-а, а нарушава типовата безопасност.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е грешка по време на компилация, която възниква при смесване на wildcards.",
+                    "rationale": "Heap pollution е проблем, който се проявява по време на изпълнение, а не по време на компилация.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Ситуация, при която променлива от параметризиран тип сочи към обект от друг параметризиран тип, нарушавайки типовата безопасност.",
+                    "rationale": "Това е точното описание. Обикновено се случва при смесване на генеричен код със сурови типове или не-генеричен код.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Това е предупреждение от компилатора, което винаги може да бъде безопасно игнорирано.",
+                    "rationale": "Това предупреждение (`unchecked`) сигнализира за потенциален риск от heap pollution и не трябва да се игнорира лекомислено.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Проблемът възниква, когато типовата безопасност, гарантирана от компилатора, е заобиколена, често чрез сурови типове."
+        },
+        {
+            "questionNumber": 3,
+            "question": "Защо следният код е проблематичен и до какво може да доведе?<pre><code>static void addToList(List list, Object item) {\n  list.add(item);\n}\nList<String> strings = new ArrayList<>();\naddToList(strings, 42); // Integer</code></pre>",
+            "answerOptions": [
+                {
+                    "text": "Ще предизвика компилационна грешка, защото `addToList` очаква `List<Object>`.",
+                    "rationale": "Методът `addToList` използва суров тип `List`, което изключва проверките на компилатора и позволява извикването.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Ще предизвика `ClassCastException` веднага след извикването на `addToList`.",
+                    "rationale": "Изключението няма да възникне веднага. Проблемът се проявява по-късно, когато се опитате да използвате елемент от списъка.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Води до heap pollution. Ще се хвърли `ClassCastException` по-късно, когато се направи опит за достъп до елемента като `String`.",
+                    "rationale": "Това е точният проблем. Кодът се компилира с предупреждение, но `Integer` се добавя в списък от `String`. Грешката ще се появи чак при опит за извличане и използване на елемента.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Няма проблем, `Integer` ще бъде автоматично преобразуван в `String`.",
+                    "rationale": "Няма автоматично преобразуване между `Integer` и `String` в този контекст.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Какво се случва, когато смесите код със сурови типове (raw types) с параметризиран код?"
+        },
+        {
+            "questionNumber": 4,
+            "question": "Какво е рекурсивен типов параметър (recursive type bound) и кой е най-честият му пример?",
+            "answerOptions": [
+                {
+                    "text": "Тип, който наследява себе си, напр. `<T extends T>`. Използва се за създаване на безкрайни йерархии.",
+                    "rationale": "Синтаксисът `<T extends T>` не е валиден и не описва рекурсивен тип. Рекурсията включва параметризиране на базовия тип със самия наследник.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Тип, който е ограничен от генеричен тип, параметризиран със самия него, напр. `<T extends Comparable<T>>`.",
+                    "rationale": "Това е класическият пример. Той гарантира, че типът `T` може да бъде сравняван само с други обекти от същия тип `T`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Метод, който извиква себе си с различен генеричен тип.",
+                    "rationale": "Това описва рекурсивен метод, а не рекурсивен типов параметър.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Тип, който може да бъде `List<List<List<...>>>` до безкрайност.",
+                    "rationale": "Това са вложени генерични типове, а не рекурсивно ограничение на параметър.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете за интерфейса `Comparable` и как той се използва, за да се гарантира, че обект може да се сравнява само със себеподобни."
+        },
+        {
+            "questionNumber": 5,
+            "question": "Как можете да получите информация за генеричния тип (напр. `String` в `List<String>`) на поле по време на изпълнение (run-time)?",
+            "answerOptions": [
+                {
+                    "text": "Чрез `field.getClass().getTypeParameters()`, което връща масив от типове.",
+                    "rationale": "Методът `getClass()` връща суровия тип (`ArrayList`), който няма информация за генеричните параметри поради type erasure.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Невъзможно е поради type erasure.",
+                    "rationale": "Въпреки type erasure, тази информация се запазва в сигнатурата на класа и може да бъде достъпена чрез Reflection API при определени условия.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Чрез `field.getGenericType()` и кастване към `ParameterizedType`.",
+                    "rationale": "Това е правилният начин. `getGenericType()` връща `Type`, който, ако е параметризиран, може да се кастне до `ParameterizedType`, за да се извлекат реалните типови аргументи.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Чрез оператора `instanceof`, напр. `field instanceof List<String>`.",
+                    "rationale": "`instanceof` не работи с параметризирани типове поради type erasure.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Java Reflection API предлага специални методи за достъп до генеричните сигнатури, които са запазени в `.class` файла."
+        },
+        {
+            "questionNumber": 6,
+            "question": "Кой от следните редове код е валиден начин за създаване на масив от списъци и защо?",
+            "answerOptions": [
+                {
+                    "text": "`List<String>[] lists = new List<String>[10];` - напълно валиден е.",
+                    "rationale": "Това е невалидно и причинява компилационна грешка, защото не може да се създават масиви от конкретни параметризирани типове.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`List<?>[] lists = new List<?>[10];` - валиден е, защото използва неограничен wildcard.",
+                    "rationale": "Това е валиден и типово безопасен начин. Макар да не можем да създадем масив от `List<String>`, можем да създадем масив от `List<?>`, в който след това да поставяме списъци от конкретни типове.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`List<Object>[] lists = new List<String>[10];` - валиден е заради ковариантността.",
+                    "rationale": "Този код не се компилира. Генеричните типове са инвариантни, за разлика от масивите, и `List<String>` не е подтип на `List<Object>`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`Object[] lists = new List<String>[10];` - валиден е, но не е типово безопасен.",
+                    "rationale": "Този код също е невалиден и няма да се компилира. Създаването на масив от параметризиран тип е забранено.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Създаването на масиви от конкретни параметризирани типове е забранено. Има ли начин да се заобиколи това ограничение безопасно чрез wildcards?"
+        },
+        {
+            "questionNumber": 7,
+            "question": "Каква е разликата между `Class<T>` и `Class<?>`?",
+            "answerOptions": [
+                {
+                    "text": "Няма разлика, те са взаимозаменяеми.",
+                    "rationale": "Има важна семантична разлика, която компилаторът използва за проверка на типовете.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`Class<T>` е type token, който носи информация за типа `T` и позволява типово безопасни операции, докато `Class<?>` е за неизвестен тип.",
+                    "rationale": "Това е точната разлика. `Class<String>` например гарантира, че `newInstance()` ще върне `String`, докато при `Class<?>` резултатът ще е `Object`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`Class<T>` може да се използва само за класове, а `Class<?>` - за интерфейси.",
+                    "rationale": "И двете могат да се използват както за класове, така и за интерфейси.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`Class<?>` е суров тип, а `Class<T>` е параметризиран.",
+                    "rationale": "И двете са параметризирани. Суровият тип би бил просто `Class`.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете какви гаранции дава всеки от тези типове, когато го използвате за създаване на нова инстанция (`newInstance()`)."
+        },
+        {
+            "questionNumber": 8,
+            "question": "Защо генеричните класове не могат да наследяват `Throwable`?",
+            "answerOptions": [
+                {
+                    "text": "Защото `Throwable` е `final` клас.",
+                    "rationale": "`Throwable` не е `final`; `Exception` и `Error` го наследяват.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Защото това би нарушило производителността на `try-catch` блоковете.",
+                    "rationale": "Причината е свързана с типовата безопасност и работата на JVM, а не пряко с производителността.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Защото `catch` клаузите не могат да работят с генерични типове поради type erasure, което би направило хващането на такива изключения невъзможно.",
+                    "rationale": "Това е основната причина. JVM по време на изпълнение трябва да знае точния тип на изключението, за да го съпостави с `catch` блок, а type erasure премахва тази информация.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Защото изключенията трябва винаги да имат конструктор по подразбиране.",
+                    "rationale": "Въпреки че е добра практика, това не е абсолютно изискване и не е причината за ограничението.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Как JVM решава кой `catch` блок да изпълни, когато е хвърлено изключение?"
+        },
+        {
+            "questionNumber": 9,
+            "question": "Какво представляват intersection types (сечения на типове) в Java generics?",
+            "answerOptions": [
+                {
+                    "text": "Wildcard, който позволява едновременно `extends` и `super`, напр. `List<? extends Number super Integer>`. ",
+                    "rationale": "Такъв синтаксис за wildcards не съществува в Java.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Типов параметър, ограничен от няколко типа (обикновено интерфейси) едновременно, напр. `<T extends Runnable & Serializable>`. ",
+                    "rationale": "Това е точното определение. Типът `T` трябва да удовлетворява всички изброени ограничения едновременно, представяйки сечението на техните характеристики.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Начин за създаване на нов тип, който е обединение на два други типа.",
+                    "rationale": "Това описва обединение (union), а не сечение (intersection). Java generics не поддържат union types директно.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Възможността един генеричен клас да имплементира няколко генерични интерфейса.",
+                    "rationale": "Това е стандартна функционалност на Java, а не специфичното значение на 'intersection type'.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Спомнете си синтаксиса за множество ограничения (multiple bounds) върху типов параметър."
+        },
+        {
+            "questionNumber": 10,
+            "question": "В метода `<T, R> R process(List<T> list, Function<T, R> func)`, каква е ролята на `Function<T, R>`?",
+            "answerOptions": [
+                {
+                    "text": "Това е генеричен клас, който съхранява елементи от тип `T` и `R`.",
+                    "rationale": "`Function` е функционален интерфейс, който дефинира операция, а не структура за данни.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е функционален интерфейс, който дефинира функция, приемаща обект от тип `T` и връщаща резултат от тип `R`.",
+                    "rationale": "Точно така. Той позволява на метода `process` да бъде гъвкав, като приема различни операции (функции) за обработка на елементите от списъка.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Това е ограничение, което изисква `R` да е наследник на `T`.",
+                    "rationale": "Няма такова ограничение в сигнатурата. `T` и `R` са независими типови параметри.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е маркерен интерфейс, който показва, че `T` и `R` могат да бъдат обработвани.",
+                    "rationale": "`Function` има един абстрактен метод (`apply`), което го прави функционален интерфейс, а не маркерен.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете за функционалното програмиране в Java. Как се подава поведение (код) като параметър на метод?"
+        },
+        {
+            "questionNumber": 11,
+            "question": "Кое твърдение най-добре описва резултата от следния код?<pre><code>List<Box<String>> listOfBoxes = new ArrayList<>();\nList<Box<?>> rawListOfBoxes = listOfBoxes; // Грешка тук?</code></pre>",
+            "answerOptions": [
+                {
+                    "text": "Кодът няма да се компилира, защото `Box<String>` не е подтип на `Box<?>`.",
+                    "rationale": "Всъщност `Box<String>` е подтип на `Box<?>`, така че това присвояване е валидно.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Кодът ще се компилира, но с предупреждение за `unchecked conversion`.",
+                    "rationale": "Предупреждение за `unchecked` се появява при работа със сурови типове, а тук и двата типа са параметризирани.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Кодът няма да се компилира, защото `List<Box<String>>` не е подтип на `List<Box<?>>`.",
+                    "rationale": "Това е грешно. Поради ковариантността на wildcard типовете, `List<Box<String>>` се счита за подтип на `List<Box<?>>`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Кодът ще се компилира успешно без грешки или предупреждения.",
+                    "rationale": "Това е верният отговор. Поради инвариантността на генериците, може да изглежда грешно, но `List<A>` Е подтип на `List<? extends A>`. В случая `Box<String>` е подтип на `Box<?>` (който е `Box<? extends Object>`), и затова `List<Box<String>>` е подтип на `List<Box<?>>`.",
+                    "isCorrect": true
+                }
+            ],
+            "hint": "Помислете за правилото: Ако `A` е подтип на `B`, то `List<A>` е подтип на `List<? extends B>`. Как се съотнася `Box<String>` към `Box<?>`?"
+        },
+        {
+            "questionNumber": 12,
+            "question": "Какъв е проблемът с използването на `var` с диамантения оператор, както е показано?<pre><code>var list = new ArrayList<>();</code></pre>",
+            "answerOptions": [
+                {
+                    "text": "Няма проблем, `list` ще бъде от тип `List<Object>`.",
+                    "rationale": "Това е правилно. Когато `var` се използва с диамантен оператор без контекст отляво, компилаторът не може да изведе конкретен тип и по подразбиране използва `Object`, създавайки `ArrayList<Object>`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Кодът няма да се компилира, защото типът не може да бъде изведен.",
+                    "rationale": "Кодът се компилира, но типът, който се извежда, може да не е този, който очаквате.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Променливата `list` ще бъде от суров тип `ArrayList`.",
+                    "rationale": "Използването на диамантен оператор предотвратява създаването на суров тип; вместо това се създава параметризиран тип, макар и с `Object`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`list` ще бъде от тип `List<String>` по подразбиране.",
+                    "rationale": "Няма такова подразбиране; компилаторът се връща към най-общия възможен тип, който е `Object`.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Когато компилаторът трябва да изведе (infer) тип за `var` от дясната страна, а там има само `<>`, какъв е най-безопасният тип, който може да предположи?"
+        },
+        {
+            "questionNumber": 13,
+            "question": "Кой от следните методи ще се компилира успешно?",
+            "answerOptions": [
+                {
+                    "text": "`public <T> T method1() { return new T(); }`",
+                    "rationale": "Няма да се компилира, защото не може да се създаде инстанция на типовия параметър `T` директно.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`public <T> void method2(List<T> list) { if (list instanceof ArrayList<String>) {} }`",
+                    "rationale": "Няма да се компилира, защото `instanceof` не може да се използва с параметризирани типове.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`public <T> void method3() { T[] array = new T[10]; }`",
+                    "rationale": "Няма да се компилира, защото не може да се създаде масив от типовия параметър `T` директно.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`public <T> void method4(T[] array, List<T> list) { list.add(array[0]); }`",
+                    "rationale": "Този метод ще се компилира. Той приема масив и списък от един и същи тип `T` и извършва валидна операция по добавяне.",
+                    "isCorrect": true
+                }
+            ],
+            "hint": "Прегледайте основните ограничения на generics: инстанциране на `T`, използване на `instanceof` и създаване на масиви от `T`."
+        },
+        {
+            "questionNumber": 14,
+            "question": "Какво е capture conversion (прихващане и преобразуване) в контекста на wildcards?",
+            "answerOptions": [
+                {
+                    "text": "Процесът на преобразуване на суров тип в параметризиран тип.",
+                    "rationale": "Това не описва capture conversion, който е специфичен за работата с wildcards.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Грешка по време на изпълнение, когато wildcard се използва неправилно.",
+                    "rationale": "Това е вътрешен механизъм на компилатора, а не грешка по време на изпълнение.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Процес, при който компилаторът вътрешно замества wildcard (`?`) с конкретен, но неизвестен типов параметър, за да извърши проверка на типовете.",
+                    "rationale": "Това е точната дефиниция. Компилаторът 'прихваща' wildcard-а и го третира като стандартен генеричен тип (напр. `CAP#1`) в рамките на израза, за да валидира операциите.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Начин за извличане на типа, скрит зад wildcard, чрез reflection.",
+                    "rationale": "Capture conversion е механизъм по време на компилация, а не техника за reflection по време на изпълнение.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Това е 'мисловен трик', който компилаторът използва, за да може да разсъждава за типове, които са обозначени с `?`."
+        },
+        {
+            "questionNumber": 15,
+            "question": "Разгледайте кода: `<T> void swap(List<T> list, int i, int j)`. Защо е по-добре да се използва `List<T>` вместо `List<?>`?",
+            "answerOptions": [
+                {
+                    "text": "Защото `List<?>` не позволява извикването на `list.get(i)`.",
+                    "rationale": "`List<?>` позволява `get`, но върнатият тип е `Object`, което би изисквало кастване.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Защото `List<?>` не позволява извикването на `list.set(i, element)`.",
+                    "rationale": "`set` е забранен за `List<?>`, защото компилаторът не знае какъв тип елемент е безопасен за добавяне.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Защото с `List<T>` компилаторът знае, че елементът, взет от позиция `i`, е от същия тип `T`, който се изисква за позиция `j`, и операцията е безопасна.",
+                    "rationale": "Това е ключовата причина. `T` създава връзка между типовете на елементите, които се четат и записват, докато `?` не дава такава гаранция.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Няма разлика, `List<?>` също би работил с малко помощни методи.",
+                    "rationale": "Въпреки че може да се напише работещ помощен метод, той би бил по-сложен и би изисквал `unchecked` кастване, докато `List<T>` решава проблема елегантно.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "За да размените два елемента, трябва да прочетете един, да прочетете втория и след това да запишете и на двете места. Кой тип позволява едновременно четене и запис?"
+        },
+        {
+            "questionNumber": 16,
+            "question": "Кое от следните е пример за `@SafeVarargs` и кога се използва?",
+            "answerOptions": [
+                {
+                    "text": "Използва се върху конструктор, за да се гарантира, че не хвърля изключения.",
+                    "rationale": "Тази анотация не е свързана с обработката на изключения.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Използва се върху метод с `varargs` параметър от не-reifiable тип, за да се подтисне предупреждението `unchecked`, когато програмистът е сигурен, че кодът е безопасен.",
+                    "rationale": "Това е точната употреба. `Varargs` вътрешно използват масиви, което може да доведе до heap pollution с генерични типове. Анотацията е обещание от програмиста, че методът не злоупотребява с `varargs` масива.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Използва се върху клас, за да се обозначи, че всички негови методи са типово безопасни.",
+                    "rationale": "Анотацията се поставя само върху методи или конструктори, не върху класове.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Използва се за автоматично генериране на `equals()` и `hashCode()` за генерични класове.",
+                    "rationale": "`@SafeVarargs` няма връзка с генерирането на тези методи.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Името на анотацията подсказва, че е свързана с 'безопасни' 'променлив брой аргументи' (`varargs`)."
+        },
+        {
+            "questionNumber": 17,
+            "question": "Какво означава, че един тип е `reifiable` (проверим по време на изпълнение)?",
+            "answerOptions": [
+                {
+                    "text": "Тип, чиято информация е напълно достъпна по време на компилация.",
+                    "rationale": "Reifiability се отнася до информацията, налична по време на изпълнение, а не компилация.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Всеки тип, който използва wildcards.",
+                    "rationale": "Типовете с wildcards са пример за non-reifiable типове.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Тип, чиято информация не е напълно премахната от type erasure и е достъпна по време на изпълнение.",
+                    "rationale": "Това е правилната дефиниция. Примери са не-генеричните типове (`String`), суровите типове (`List`), и типове с неограничени wildcards (`List<?>`). `List<String>` не е reifiable.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Тип, който може да бъде използван в `instanceof` проверка.",
+                    "rationale": "Това е следствие от това, че типът е reifiable, но не е пълната дефиниция.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете кои видове типове губят информация след type erasure и кои не. Например, `List<String>` срещу `List<?>`."
+        },
+        {
+            "questionNumber": 18,
+            "question": "Разгледайте двата метода:<pre><code>// Метод 1\n<T> void method1(List<T> list) { ... }\n\n// Метод 2\nvoid method2(List<?> list) { ... }</code></pre>Кога бихте предпочели Метод 1 пред Метод 2?",
+            "answerOptions": [
+                {
+                    "text": "Когато методът трябва само да проверява размера на списъка.",
+                    "rationale": "За операции, които не зависят от типа на елементите, `List<?>` (Метод 2) е по-прост и по-подходящ.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Когато има зависимост между типовете на няколко параметъра или между параметър и връщана стойност.",
+                    "rationale": "Това е ключовият случай за използване на `<T>`. Например, `<T> T first(List<T> list)` гарантира, че връщаният тип е същият като типа на елементите в списъка.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Когато методът трябва да добавя нови елементи в списъка.",
+                    "rationale": "За добавяне на елементи е по-подходящо да се използва `List<? super SomeType>`, а не непременно `<T>`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Винаги е по-добре да се използва `<T>`, защото е по-гъвкаво.",
+                    "rationale": "Не винаги е по-добре. Ако wildcard (`?`) е достатъчен, той прави сигнатурата на метода по-проста и лесна за разбиране от ползвателите на API-то.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете за случаи, в които трябва да 'запомните' типа на един параметър, за да го използвате за друг параметър или за връщаната стойност."
+        },
+        {
+            "questionNumber": 19,
+            "question": "Ако имате `class A<T> { ... }` и `class B<T> extends A<T> { ... }`, кое от следните присвоявания е невалидно?",
+            "answerOptions": [
+                {
+                    "text": "`A<String> a = new B<String>();`",
+                    "rationale": "Това е валидно. `B<String>` е подтип на `A<String>`, така че полиморфизмът работи както се очаква.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`A<?> a = new B<String>();`",
+                    "rationale": "Това е валидно. `B<String>` е подтип на `A<String>`, който е подтип на `A<?>`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`A<Object> a = new B<String>();`",
+                    "rationale": "Това е невалидно. Поради инвариантността, `B<String>` не е подтип на `A<Object>`, дори и `B` да наследява `A`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`A<? extends CharSequence> a = new B<String>();`",
+                    "rationale": "Това е валидно. `String` имплементира `CharSequence`, и тъй като `B` наследява `A`, `B<String>` може да бъде присвоен на променлива от този тип.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Инвариантността на генериците важи дори при наследяване. `List<String>` не е `List<Object>`, и по същата логика..."
+        },
+        {
+            "questionNumber": 20,
+            "question": "Каква е целта на F-bounded quantification, илюстрирано от `<T extends Enum<T>>`?",
+            "answerOptions": [
+                {
+                    "text": "Да се гарантира, че `T` е едновременно и `Enum` и от тип `T`.",
+                    "rationale": "Това е твърде буквално тълкуване. Целта е да се създаде връзка между `Enum` и неговия собствен подтип.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е синтактична грешка, тъй като тип се ограничава от себе си.",
+                    "rationale": "Това не е грешка, а мощен идиом в Java generics.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Да се ограничи `T` да бъде само такъв `Enum`, който може да се сравнява и работи с елементи от собствения си тип.",
+                    "rationale": "Това е точната цел. Сигнатурата на `Enum` е `Enum<E extends Enum<E>>`. Ограничението гарантира, че всеки `enum` тип се параметризира със самия себе си, което позволява методи като `compareTo` да работят правилно.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Да се позволи на `enum`-и да наследяват други `enum`-и.",
+                    "rationale": "`enum`-ите в Java не могат да наследяват други `enum`-и; те имплицитно наследяват `java.lang.Enum`.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Разгледайте декларацията на самия `java.lang.Enum` клас. Какъв е неговият генеричен параметър?"
+        },
+        {
+            "questionNumber": 21,
+            "question": "Защо при `List<List<?>> list`, можем да добавим `new ArrayList<String>()`, но не и `new ArrayList()`?",
+            "answerOptions": [
+                {
+                    "text": "Защото `new ArrayList()` създава суров тип, който не е съвместим с параметризирани типове.",
+                    "rationale": "Това е точната причина. `ArrayList<String>` е от тип `List<String>`, който е подтип на `List<?>`. Суровият `ArrayList` обаче не е подтип на `List<?>` и компилаторът го забранява, за да предотврати смесване на сурови и параметризирани типове.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Защото `new ArrayList<String>()` има конкретен тип, а `new ArrayList()` няма.",
+                    "rationale": "Въпреки че е вярно, основната причина е в правилата за съвместимост на типовете, които компилаторът прилага.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Всъщност и двете операции са забранени.",
+                    "rationale": "Добавянето на `new ArrayList<String>()` е позволено.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Всъщност и двете операции са позволени.",
+                    "rationale": "Добавянето на суровия `ArrayList` ще доведе до компилационна грешка.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Компилаторът се опитва да предпази от смесването на код, който използва generics, с такъв, който не ги използва (legacy/raw). Как се съотнася суровият `List` към `List<?>`?"
+        },
+        {
+            "questionNumber": 22,
+            "question": "Кога се налага да се използват изрични типови аргументи (explicit type arguments) при извикване на генеричен метод?",
+            "answerOptions": [
+                {
+                    "text": "Винаги, за да е по-ясен кодът.",
+                    "rationale": "В повечето случаи компилаторът успешно извежда (infers) типовете и изричното им посочване не е нужно.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Само когато методът е статичен.",
+                    "rationale": "Типовата инференция работи както за статични, така и за нестатични методи.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Когато компилаторът не може да изведе типовете от контекста, например при верижни извиквания или когато се цели по-общ тип.",
+                    "rationale": "Това е основният случай. Понякога контекстът е недостатъчен или двусмислен, и се налага програмистът да помогне на компилатора, указвайки типовете изрично чрез синтаксиса `ClassName.<Type>methodName()`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Никога, компилаторът винаги може да изведе типовете.",
+                    "rationale": "Съществуват сложни сценарии, в които типовата инференция се проваля или не дава желания резултат.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете за ситуация, в която резултатът от генеричен метод се подава на друг метод и компилаторът не може да реши кой тип е най-подходящ."
+        },
+        {
+            "questionNumber": 23,
+            "question": "Какво е ограничението на wildcard с множество горни граници?",
+            "answerOptions": [
+                {
+                    "text": "Може да се дефинира като `List<? extends A & B>`.",
+                    "rationale": "За разлика от типовите параметри (`<T extends A & B>`), wildcards могат да имат само една горна граница (`extends`).",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Не съществува. Wildcard може да има само една `extends` граница.",
+                    "rationale": "Това е правилно. Синтаксисът `? extends A & B` е невалиден в Java. Това е едно от основните ограничения на wildcards в сравнение с типовите параметри.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Може да има само един клас и един интерфейс.",
+                    "rationale": "Дори тази комбинация не е позволена за wildcards.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Използва се само при capture conversion.",
+                    "rationale": "Capture conversion е свързан механизъм, но той не променя синтактичното правило, че wildcard има само една граница.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Сравнете синтаксиса за ограничения на `<T>` с този на `?`."
+        },
+        {
+            "questionNumber": 24,
+            "question": "Какво ще се случи, ако се опитате да добавите елемент в резултата от `Collections.unmodifiableList(list)`?",
+            "answerOptions": [
+                {
+                    "text": "Ще се получи компилационна грешка.",
+                    "rationale": "Компилаторът не знае, че списъкът е непроменяем. Методът `add` съществува в интерфейса `List`, така че кодът се компилира.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Ще се хвърли `UnsupportedOperationException` по време на изпълнение.",
+                    "rationale": "Това е правилният резултат. Методът връща 'обвивка' (wrapper) около оригиналния списък, чиито методи за модификация са имплементирани да хвърлят това изключение.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Елементът ще бъде добавен в оригиналния списък.",
+                    "rationale": "Целта на `unmodifiableList` е да предотврати точно това.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Ще се хвърли `IllegalStateException`.",
+                    "rationale": "Грешката е `UnsupportedOperationException`, която е по-специфична за този тип операция.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Какъв е договорът на методите, които връщат 'unmodifiable' колекции?"
+        },
+        {
+            "questionNumber": 25,
+            "question": "Ако `Sub` е подклас на `Super`, какво е вярно за `Comparator<Super>` и `Comparator<Sub>`?",
+            "answerOptions": [
+                {
+                    "text": "Те са инвариантни и несвързани.",
+                    "rationale": "За разлика от `List<T>`, генеричните интерфейси, които са 'консуматори', проявяват различно поведение.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`Comparator<Super>` е подтип на `Comparator<Sub>` (контравариантност).",
+                    "rationale": "Това е вярно. Компаратор, който може да сравнява обекти от тип `Super`, очевидно може да сравнява и обекти от тип `Sub`. Следователно, той може да се използва навсякъде, където се изисква `Comparator<Sub>`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`Comparator<Sub>` е подтип на `Comparator<Super>` (ковариантност).",
+                    "rationale": "Това е грешно. Компаратор, който работи само със `Sub`, не може да обработи по-общия случай `Super`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "И двете са подтипове един на друг.",
+                    "rationale": "Това е невъзможно в системата от типове на Java.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Ако имате функция, която приема `Number`, можете ли да й подадете `Integer`? Как това се отнася до компараторите, които са вид 'функции'?"
+        },
+        {
+            "questionNumber": 26,
+            "question": "Какъв е типът на `null` в контекста на generics?",
+            "answerOptions": [
+                {
+                    "text": "`Object`",
+                    "rationale": "Въпреки че `null` може да бъде присвоен на всяка референция към обект, той няма собствен тип `Object`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Той няма тип и може да бъде присвоен на всякакъв референтен тип, включително всеки параметризиран тип.",
+                    "rationale": "Това е правилно. `null` е специална стойност, която е съвместима с всеки референтен тип, което обяснява защо `list.add(null)` е винаги валидно за `List<?>`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Типът му се определя от контекста чрез type inference.",
+                    "rationale": "`null` няма тип, който да бъде изведен; той е просто литерал, който може да бъде присвоен на променлива от даден тип.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Специален тип, наречен `NullType`.",
+                    "rationale": "Въпреки че вътрешно компилаторът може да има такова понятие, в езика Java `null` просто няма тип.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Защо `List<? extends Number> list; list.add(null);` е валидна операция?"
+        },
+        {
+            "questionNumber": 27,
+            "question": "Какво ще отпечата следният код?<pre><code>System.out.println(new ArrayList<String>().getClass() == new ArrayList<Integer>().getClass());</code></pre>",
+            "answerOptions": [
+                {
+                    "text": "`false`",
+                    "rationale": "Това би било вярно, ако генеричната информация се запазваше по време на изпълнение.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`true`",
+                    "rationale": "Поради type erasure, по време на изпълнение и двата обекта са от един и същ клас - `java.util.ArrayList`. Методът `getClass()` връща този суров клас, и затова сравнението е вярно.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Кодът няма да се компилира.",
+                    "rationale": "Кодът е напълно валиден и ще се компилира без проблеми.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Ще хвърли `ClassCastException`.",
+                    "rationale": "Няма никакво кастване в този код, което би могло да предизвика такова изключение.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Какво връща методът `getClass()` върху обект от генеричен клас?"
+        },
+        {
+            "questionNumber": 28,
+            "question": "Защо `super` wildcard-ът се нарича 'consumer' (консуматор) в принципа PECS?",
+            "answerOptions": [
+                {
+                    "text": "Защото 'консумира' памет по-бързо от `extends`.",
+                    "rationale": "Принципът PECS не е свързан с управлението на памет.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Защото структурата 'консумира' (приема за запис) стойности от дадения тип или негови подтипове.",
+                    "rationale": "Това е точното обяснение. `List<? super Integer>` може да 'консумира' (приеме) стойности от тип `Integer`, защото компилаторът знае, че `Integer` е съвместим с `Integer`, `Number` или `Object`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Защото можем да 'консумираме' (четем) стойности от него.",
+                    "rationale": "Основната безопасна операция е запис, а не четене. При четене получаваме само `Object`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Защото е предназначен за използване във функционални интерфейси като `Consumer<T>`.",
+                    "rationale": "Въпреки че се използва там, името 'consumer' в PECS има по-общо значение, отнасящо се до всяка структура, в която се записва.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Каква е основната операция, която е безопасна за `List<? super Dog>`? Да добавим `new Dog()` или да извлечем `Dog`?"
+        },
+        {
+            "questionNumber": 29,
+            "question": "Ако имаме `List<T>`, можем ли да сме сигурни, че `T` е клас, а не интерфейс?",
+            "answerOptions": [
+                {
+                    "text": "Да, `T` винаги представлява конкретен клас.",
+                    "rationale": "`T` може да бъде заменено с всякакъв референтен тип, включително интерфейс.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Не, `T` може да бъде заменено с клас или интерфейс.",
+                    "rationale": "Това е вярно. `List<Runnable>` е напълно валидна декларация, където `Runnable` е интерфейс.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Зависи от това дали `List` е `ArrayList` или `LinkedList`.",
+                    "rationale": "Конкретната имплементация на `List` не променя правилата за типовите параметри.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Да, освен ако не е дефинирано като `<T extends SomeInterface>`.",
+                    "rationale": "Дори с такова ограничение, `T` пак може да бъде друг интерфейс, който наследява `SomeInterface`.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Можете ли да създадете `List<Serializable>`?"
+        },
+        {
+            "questionNumber": 30,
+            "question": "Кое от следните е легално в Java?",
+            "answerOptions": [
+                {
+                    "text": "`new List<String>()`",
+                    "rationale": "Не може да се създаде инстанция на интерфейс (`List`).",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`new T()` където `T` е неограничен типов параметър.",
+                    "rationale": "Не може да се създаде инстанция на неограничен типов параметър.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`new ArrayList<>()`",
+                    "rationale": "Това е напълно легално използване на диамантения оператор за създаване на инстанция на конкретен клас.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`new String<Integer>()`",
+                    "rationale": "`String` не е генеричен клас и не може да бъде параметризиран.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Трябва да инстанцирате конкретен клас, а не интерфейс или типов параметър."
+        },
+        {
+            "questionNumber": 31,
+            "question": "Какъв е проблемът при override-ване на метод с генеричен параметър в суров подклас?",
+            "answerOptions": [
+                {
+                    "text": "Няма проблем, това е позволено за обратна съвместимост.",
+                    "rationale": "Има проблем, свързан с type erasure и сигнатурите на методите, който компилаторът решава по специфичен начин.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Компилаторът генерира bridge method, за да осигури съвместимост с наследения метод след type erasure.",
+                    "rationale": "Това е правилният отговор. Override-натият метод в суровия подклас ще има сигнатура с `Object`, докато оригиналният метод е имал по-специфичен тип. Bridge методът е нужен, за да се запази полиморфизмът.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Ще се получи компилационна грешка за несъвместими типове.",
+                    "rationale": "Кодът ще се компилира, но с предупреждения, а компилаторът ще генерира допълнителен код.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Подкласът трябва също да бъде направен генеричен.",
+                    "rationale": "Това би било по-чистото решение, но Java позволява наследяване със сурови типове заради обратна съвместимост.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Това е един от класическите сценарии, които налагат генерирането на bridge methods."
+        },
+        {
+            "questionNumber": 32,
+            "question": "Каква е целта на `java.lang.reflect.TypeVariable`?",
+            "answerOptions": [
+                {
+                    "text": "Да представлява конкретен тип като `String` или `Integer`.",
+                    "rationale": "Конкретните типове се представят от `Class`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Да представлява wildcard тип като `? extends Number`.",
+                    "rationale": "За това се използва `WildcardType`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Да представлява типов параметър като `T` в `List<T>`.",
+                    "rationale": "Това е точната му цел. Този интерфейс позволява по време на изпълнение да се инспектират името и границите на типовия параметър.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Да представлява параметризиран тип като `List<String>`.",
+                    "rationale": "За това се използва `ParameterizedType`.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Името на интерфейса подсказва, че е свързан с 'типова променлива' (type variable)."
+        },
+        {
+            "questionNumber": 33,
+            "question": "Ако `method(List<String> ls)` бъде overload-нат с `method(List<Integer> li)`, какво ще се случи?",
+            "answerOptions": [
+                {
+                    "text": "Кодът ще се компилира успешно, защото типовете са различни.",
+                    "rationale": "Въпреки че изглеждат различни, помислете как JVM ги вижда след type erasure.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Кодът няма да се компилира, защото след type erasure двата метода имат еднаква сигнатура (`method(List)`).",
+                    "rationale": "Това е правилният отговор. За JVM, и `List<String>`, и `List<Integer>` стават просто `List`, което води до конфликт на сигнатури.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Ще се компилира, но ще има `unchecked` предупреждение.",
+                    "rationale": "Това не е предупреждение, а твърда компилационна грешка, защото нарушава правилата за overloading.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Ще работи, ако единият метод е `private`.",
+                    "rationale": "Модификаторът за достъп не променя сигнатурата на метода в контекста на overloading.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Какво остава от `List<String>` и `List<Integer>` в байткода?"
+        },
+        {
+            "questionNumber": 34,
+            "question": "Кое твърдение описва правилно взаимодействието между generics и анотации?",
+            "answerOptions": [
+                {
+                    "text": "Анотациите не могат да се използват върху генерични типове.",
+                    "rationale": "Анотации могат да се поставят на декларации на генерични класове и методи.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Типовият параметър може да бъде анотиран, напр. `List<@NonNull String>`.",
+                    "rationale": "Това е вярно. Type annotations (въведени в Java 8) позволяват поставянето на анотации върху всяка употреба на тип, включително типови аргументи.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Елементите на анотация не могат да бъдат от генеричен тип.",
+                    "rationale": "Всъщност, елемент на анотация може да бъде от тип `Class<?>`, но не и от по-специфичен генеричен тип като `Class<String>`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Анотацията `@Override` не работи за генерични методи.",
+                    "rationale": "Анотацията `@Override` работи коректно и е много важна при override-ване на генерични методи.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Java 8 въведе type annotations. Къде могат да се поставят те?"
+        },
+        {
+            "questionNumber": 35,
+            "question": "Какъв е типът на израза `(true ? new ArrayList<String>() : new ArrayList<Integer>())`?",
+            "answerOptions": [
+                {
+                    "text": "Кодът няма да се компилира поради несъвместими типове.",
+                    "rationale": "Компилаторът ще се опита да намери общ надтип за двете разклонения на тернарния оператор.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`ArrayList<Object>`",
+                    "rationale": "Това е близко, но не е най-точният отговор. Компилаторът намира най-специфичния общ надтип.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Типът е `ArrayList<? extends Serializable & Comparable>` (или подобен общ надтип).",
+                    "rationale": "Това е правилно. Компилаторът намира най-близкия общ надтип на `String` и `Integer`, който в този случай е сечение от интерфейсите, които и двата имплементират, като `Serializable` и `Comparable`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Суров тип `ArrayList`.",
+                    "rationale": "Компилаторът избягва суровите типове и се опитва да намери най-добрия възможен параметризиран тип.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Какво прави компилаторът, когато трябва да определи типа на израз, който може да бъде един от два различни параметризирани типа?"
+        },
+        {
+            "questionNumber": 36,
+            "question": "Кое е основното предимство на `List.of(\"a\", \"b\")` пред `Arrays.asList(\"a\", \"b\")`?",
+            "answerOptions": [
+                {
+                    "text": "`List.of` връща променяем списък, докато `Arrays.asList` връща непроменяем.",
+                    "rationale": "Всъщност е обратното. `List.of` връща наистина непроменяем списък, докато `Arrays.asList` връща списък с фиксиран размер, чиито елементи могат да се променят.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`List.of` връща наистина непроменяем (immutable) списък, докато `Arrays.asList` връща списък с фиксиран размер, който е 'обвивка' на оригиналния масив.",
+                    "rationale": "Това е ключовата разлика. Опитите за модификация на списък от `List.of` винаги ще се провалят, докато при `Arrays.asList` можете да промените елемент (чрез `set`), което променя и оригиналния масив.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`Arrays.asList` е по-бърз.",
+                    "rationale": "Производителността не е основната разлика; семантиката на променяемост е по-важна.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`List.of` не позволява `null` елементи, докато `Arrays.asList` ги позволява.",
+                    "rationale": "Това също е вярна разлика, но основното предимство се крие в гарантираната непроменяемост.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете за разликата между 'непроменяем' (immutable) и 'списък с фиксиран размер' (fixed-size)."
+        },
+        {
+            "questionNumber": 37,
+            "question": "Какво е 'target typing' и как се отнася към generics?",
+            "answerOptions": [
+                {
+                    "text": "Процесът на изрично указване на типове, напр. `Util.<String>method()`.",
+                    "rationale": "Това е explicit type argument, а не target typing.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Идеята, че типът на един израз се определя от контекста, в който се използва, например от типа на променливата, на която се присвоява.",
+                    "rationale": "Това е точното определение. Например, в `List<String> list = Collections.emptyList();`, компилаторът знае, че `emptyList()` трябва да върне `List<String>`, защото това е 'целта' (target).",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Ограничаване на генеричен тип, напр. `<T extends Number>`.",
+                    "rationale": "Това е bounded type parameter, а не target typing.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Грешка, при която се присвоява грешен тип на променлива.",
+                    "rationale": "Target typing е механизъм на компилатора за извеждане на типове, а не грешка.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "В израза `List<String> list = Collections.emptyList();`, откъде компилаторът знае какъв тип `List` да върне `emptyList()`?"
+        },
+        {
+            "questionNumber": 38,
+            "question": "Каква е целта на `Collections.checkedList(list, type)`?",
+            "answerOptions": [
+                {
+                    "text": "Да провери по време на компилация дали всички елементи в `list` са от тип `type`.",
+                    "rationale": "Проверката се случва по време на изпълнение, а не по време на компилация.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Да създаде нов списък, който съдържа само елементите от `list`, които са от тип `type`.",
+                    "rationale": "Методът не филтрира списъка, а го 'обвива'.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Да върне динамично-проверявана 'обвивка' на списъка, която хвърля `ClassCastException` при опит за добавяне на елемент от грешен тип.",
+                    "rationale": "Това е точната цел. Използва се за предпазване от heap pollution, когато се предава генерична колекция на legacy код, който работи със сурови типове.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Да направи списъка непроменяем (unmodifiable).",
+                    "rationale": "За тази цел се използва `Collections.unmodifiableList`.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Този метод е защитен механизъм, който добавя проверки по време на изпълнение, за да компенсира липсата на такива в legacy (non-generic) код."
+        },
+        {
+            "questionNumber": 39,
+            "question": "Какъв е резултатът от type erasure за типа `<T extends Number & Runnable>`?",
+            "answerOptions": [
+                {
+                    "text": "`Object`",
+                    "rationale": "Типът се заменя с първата граница, а не с `Object`, освен ако няма граници.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`Number`",
+                    "rationale": "Това е вярно. При множество граници, type erasure заменя типовия параметър с първата граница в декларацията, която трябва да е клас (ако има такъв).",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`Runnable`",
+                    "rationale": "Класът (ако има) винаги е първа граница и се използва за type erasure.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Кодът няма да се компилира, защото не може да има две граници.",
+                    "rationale": "Множество граници са позволени, стига да има най-много един клас и той да е на първо място.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Какво е правилото за type erasure, когато има множество граници (`multiple bounds`)?"
+        },
+        {
+            "questionNumber": 40,
+            "question": "Ако имате `Optional<String> opt`, защо `opt.map(s -> s.length())` връща `Optional<Integer>`, а не `Integer`?",
+            "answerOptions": [
+                {
+                    "text": "Защото `map` винаги връща същия генеричен тип.",
+                    "rationale": "Напротив, `map` е проектиран да трансформира вътрешната стойност и съответно генеричния тип на `Optional`-а.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "За да се запази 'контейнерът' `Optional` и да се позволи верижно извикване на други `Optional` методи, дори ако първоначалният е бил празен.",
+                    "rationale": "Това е основният принцип на `map`. Той прилага функцията само ако стойността присъства, но винаги връща `Optional`, за да може веригата от операции да продължи безопасно, без да се налагат проверки за `null`.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Защото `s.length()` връща `Integer`, който трябва да бъде 'обвит' (boxed).",
+                    "rationale": "`s.length()` връща примитивен `int`, който се обвива в `Integer`, но причината `map` да връща `Optional<Integer>` е в дизайна на самия `map` метод.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Всъщност връща `Integer`, ако `Optional` съдържа стойност.",
+                    "rationale": "Методът `map` винаги връща `Optional`, докато методи като `orElse` или `get` се използват за извличане на самата стойност.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Каква е основната цел на `Optional` и методите му като `map` и `flatMap`? Как те помагат да се избегнат `NullPointerException`?"
+        },
+        {
+            "questionNumber": 41,
+            "question": "Кой е основният проблем на `List<T>[]`?",
+            "answerOptions": [
+                {
+                    "text": "Заема твърде много памет.",
+                    "rationale": "Проблемът не е в паметта, а в типовата безопасност.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Комбинацията от ковариантността на масивите и инвариантността на генериците нарушава типовата система.",
+                    "rationale": "Това е точната причина. Ако беше позволено `List<String>[] lists = new List<String>[1]; Object[] objs = lists; objs[0] = new ArrayList<Integer>();`, щяхме да имаме `List<Integer>` в масив от `List<String>`, което би довело до `ClassCastException` по-късно.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Не може да се итерира с `for-each` цикъл.",
+                    "rationale": "Ако можеше да се създаде, щеше да може да се итерира.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Type erasure премахва `T`, правейки типа на масива неизвестен.",
+                    "rationale": "Въпреки че type erasure е част от механизма, основният конфликт е между правилата за ковариантност и инвариантност.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Спомнете си `ArrayStoreException` и защо масивите са 'счупени' по отношение на типовата безопасност в сравнение с генериците."
+        },
+        {
+            "questionNumber": 42,
+            "question": "Каква е разликата между `?` и `? extends Object`?",
+            "answerOptions": [
+                {
+                    "text": "`?` може да бъде и примитивен тип, докато `? extends Object` не може.",
+                    "rationale": "Генеричните типове и wildcards никога не могат да бъдат примитивни типове.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`? extends Object` позволява извикването на методи от `Object`, докато `?` не.",
+                    "rationale": "И при двата случая можем безопасно да извикваме методи от `Object`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`?` се използва за полета, а `? extends Object` за параметри на методи.",
+                    "rationale": "Няма такова правило; те могат да се използват на едни и същи места.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Няма семантична разлика, те са напълно еквивалентни.",
+                    "rationale": "Тъй като всеки референтен тип в Java наследява `Object`, 'неизвестен тип' и 'неизвестен тип, който е наследник на Object' означават едно и също нещо.",
+                    "isCorrect": true
+                }
+            ],
+            "hint": "Каква е най-висшата точка в йерархията на класовете в Java?"
+        },
+        {
+            "questionNumber": 43,
+            "question": "Кога е полезно да се използва wildcard с долна граница, като `<? super T>`?",
+            "answerOptions": [
+                {
+                    "text": "Когато искаме да гарантираме, че можем да четем обекти от тип `T` от колекцията.",
+                    "rationale": "За безопасно четене на обекти от тип `T` се използва горна граница (`? extends T`).",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Когато искаме да сложим (запишем) обекти от тип `T` в колекцията.",
+                    "rationale": "Това е точната употреба. `List<? super String>` може безопасно да приеме `String`, защото знаем, че `String` е съвместим с всеки свой родител (като `CharSequence` или `Object`).",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Когато искаме колекцията да може да съдържа само `T` и нищо друго.",
+                    "rationale": "За такава строга гаранция се използва `List<T>` без wildcards.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Когато искаме да използваме `instanceof`.",
+                    "rationale": "`instanceof` не работи с параметризирани типове, независимо от wildcards.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Спомнете си принципа PECS. Коя част от него се отнася до 'Consumer'?"
+        },
+        {
+            "questionNumber": 44,
+            "question": "Защо ламбда изразите като `s -> s.isEmpty()` нямат собствен генеричен тип?",
+            "answerOptions": [
+                {
+                    "text": "Защото винаги връщат `boolean`.",
+                    "rationale": "Ламбда изразите могат да връщат всякакъв тип, не само `boolean`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Типът на ламбда израза се извежда от контекста (target type), т.е. от функционалния интерфейс, който се очаква.",
+                    "rationale": "Това е правилно. Самият ламбда израз няма тип; той получава своя тип от 'целта', например `Predicate<String>`, `Function<String, Boolean>` и т.н.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Защото работят само със `String` обекти.",
+                    "rationale": "Ламбда изразите могат да работят с всякакви типове обекти.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Защото са анонимни и не могат да имат генерична декларация.",
+                    "rationale": "Въпреки че са анонимни, основната причина е, че типът им се определя от контекста, а не е вграден в самия ламбда израз.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Ако имате само `s -> s.length()`, какъв е неговият тип, без да знаете къде ще бъде използван?"
+        },
+        {
+            "questionNumber": 45,
+            "question": "Кое от следните твърдения за `ClassCastException` и generics е най-точно?",
+            "answerOptions": [
+                {
+                    "text": "Generics напълно елиминират възможността за `ClassCastException`.",
+                    "rationale": "Generics значително намаляват риска, но не го елиминират напълно, особено при смесване със сурови типове.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Generics преместват `ClassCastException` от време на изпълнение към време на компилация (като грешка `incompatible types`).",
+                    "rationale": "Това е една от основните цели на generics. Вместо да се сблъскате с `ClassCastException` по време на работа, компилаторът ви казва за проблема с несъвместими типове предварително.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`ClassCastException` се случва само когато се използват wildcards.",
+                    "rationale": "Рискът от `ClassCastException` е най-голям при използване на сурови типове, не на wildcards.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Компилаторът автоматично вмъква `try-catch` блокове за `ClassCastException`.",
+                    "rationale": "Компилаторът вмъква каствания, но не и `try-catch` блокове. Ако кастването се провали, изключението се хвърля.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Каква е основната полза от това компилаторът да знае, че имате `List<String>`, а не просто `List`?"
+        },
+        {
+            "questionNumber": 46,
+            "question": "Какъв е проблемът с този код?<pre><code><T> T[] toArray(List<T> list) {\n  T[] array = new T[list.size()]; // Проблемен ред\n  // ...\n  return array;\n}</code></pre>",
+            "answerOptions": [
+                {
+                    "text": "Не може да се извика `list.size()` върху генеричен списък.",
+                    "rationale": "Методът `size()` е напълно достъпен и не зависи от генеричния тип.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Не може да се създаде масив от неопределен типов параметър `T` (`new T[...]`).",
+                    "rationale": "Това е точното ограничение. Поради type erasure, JVM не знае какъв тип масив да създаде по време на изпълнение.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Връщаният тип `T[]` е невалиден.",
+                    "rationale": "Връщаният тип е валиден, но създаването на масива вътре в метода е проблемът.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Променливата `array` трябва да е от тип `Object[]`.",
+                    "rationale": "Дори да се използва `Object[]`, това няма да реши проблема с връщането на `T[]` без небезопасно кастване.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Това е едно от фундаменталните ограничения на generics, свързано с type erasure и масивите."
+        },
+        {
+            "questionNumber": 47,
+            "question": "Какъв е правилният начин да се имплементира методът `toArray` от предишния въпрос, така че да връща `T[]`?",
+            "answerOptions": [
+                {
+                    "text": "Чрез създаване на `Object[]` и кастване към `T[]`.",
+                    "rationale": "Това ще доведе до `ClassCastException`, защото `Object[]` не може да бъде кастнат към `String[]` (например).",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Чрез подаване на `Class<T>` обект като параметър, за да се използва `Array.newInstance()`.",
+                    "rationale": "Това е един от стандартните и типово безопасни начини. Като подадем `Class<T>`, ние даваме на метода нужната информация за типа по време на изпълнение, за да създаде правилния масив.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Чрез използване на сурови типове, за да се заобиколи проверката.",
+                    "rationale": "Използването на сурови типове би премахнало типовата безопасност и е лоша практика.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Невъзможно е да се имплементира такъв метод.",
+                    "rationale": "Възможно е, но изисква подаване на допълнителна информация за типа по време на изпълнение.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Как можем да 'инжектираме' информация за типа `T` по време на изпълнение, за да компенсираме ефекта от type erasure?"
+        },
+        {
+            "questionNumber": 48,
+            "question": "Кое е вярно за вложени генерични типове като `List<Optional<String>>`?",
+            "answerOptions": [
+                {
+                    "text": "Те не са позволени в Java.",
+                    "rationale": "Вложените генерични типове са напълно позволени и много често използвани.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Външният тип (`List`) се изтрива при компилация, но вътрешният (`Optional<String>`) се запазва.",
+                    "rationale": "Type erasure работи рекурсивно; цялата генерична информация се изтрива, оставяйки `List` от `Optional`.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Те позволяват създаването на сложни, но типово безопасни структури от данни.",
+                    "rationale": "Това е тяхната основна цел - да се моделират сложни структури (списък от опционални стойности на низове), като същевременно се запазват гаранциите на компилатора.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Могат да бъдат вложени само до две нива.",
+                    "rationale": "Няма теоретично ограничение за дълбочината на влагане.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Как бихте представили матрица от числа, използвайки генерични колекции?"
+        },
+        {
+            "questionNumber": 49,
+            "question": "Какво е 'unbounded wildcard' и кога се използва?",
+            "answerOptions": [
+                {
+                    "text": "Това е `? extends T`. Използва се, когато имаме горна граница.",
+                    "rationale": "Това е 'upper-bounded wildcard'.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е `? super T`. Използва се, когато имаме долна граница.",
+                    "rationale": "Това е 'lower-bounded wildcard'.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "Това е `?`. Използва се, когато типът е без значение за логиката на метода или се използват само методи от `Object`.",
+                    "rationale": "Това е точното определение. Например, `printList(List<?> list)` е подходящо, ако методът просто извиква `toString()` на всеки елемент или проверява размера на списъка.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Това е просто `T`, когато няма `extends` клауза.",
+                    "rationale": "Това е 'unbounded type parameter', а не 'unbounded wildcard'.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Помислете за метод, който трябва да работи с `List<String>`, `List<Integer>`, `List<Object>` и т.н., без да го интересува какъв е типът вътре."
+        },
+        {
+            "questionNumber": 50,
+            "question": "Кой от следните изрази ще се провали по време на изпълнение, а не по време на компилация?",
+            "answerOptions": [
+                {
+                    "text": "`List<Object> list = new ArrayList<String>();`",
+                    "rationale": "Това ще се провали по време на компилация поради инвариантността.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`Object[] array = new String[1]; array[0] = 1;`",
+                    "rationale": "Това ще се провали по време на изпълнение с `ArrayStoreException`. Ковариантността на масивите позволява на компилатора да пропусне грешката, но JVM я хваща.",
+                    "isCorrect": true
+                },
+                {
+                    "text": "`List<String> list = new ArrayList<Object>();`",
+                    "rationale": "Това също ще се провали по време на компилация.",
+                    "isCorrect": false
+                },
+                {
+                    "text": "`List<? extends Number> list = new ArrayList<String>();`",
+                    "rationale": "Това ще се провали по време на компилация, защото `String` не е наследник на `Number`.",
+                    "isCorrect": false
+                }
+            ],
+            "hint": "Спомнете си кой от двата механизма – масиви или генерични колекции – е 'счупен' и позволява грешки с типовете да преминат през компилатора."
+        }
+    ]
+};
+
+        // DOM Elements
+        const questionArea = document.getElementById('question-area');
+        const questionTextElement = document.getElementById('question-text');
+        const answerButtonsElement = document.getElementById('answer-buttons');
+        const nextButton = document.getElementById('next-btn');
+        const restartButton = document.getElementById('restart-btn');
+        const resultsContainer = document.getElementById('results-container');
+        const scoreTextElement = document.getElementById('score-text');
+        const scoreMessageElement = document.getElementById('score-message');
+        const rationaleContainer = document.getElementById('rationale-container');
+        const rationaleTextElement = document.getElementById('rationale-text');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const totalQuestions = quizData.questions.length;
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsContainer.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            rationaleContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            document.getElementById('quiz-header').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = quizData.questions[currentQuestionIndex];
+            const questionNumber = currentQuestionIndex + 1;
+            
+            questionTextElement.innerHTML = `<span class="text-gray-500 font-medium">${questionNumber}.</span> ${currentQuestion.question}`;
+            
+            // Update progress
+            progressText.innerText = `Въпрос ${questionNumber} от ${totalQuestions}`;
+            progressBar.style.width = `${(questionNumber / totalQuestions) * 100}%`;
+
+            currentQuestion.answerOptions.forEach(answer => {
+                const button = document.createElement('button');
+                button.innerText = answer.text;
+                button.classList.add('answer-btn', 'w-full', 'p-4', 'rounded-lg', 'font-medium');
+                if (answer.isCorrect) {
+                    button.dataset.correct = "true";
+                }
+                button.dataset.rationale = answer.rationale;
+                button.addEventListener('click', selectAnswer);
+                answerButtonsElement.appendChild(button);
+            });
+        }
+        
+        function resetState() {
+            nextButton.classList.add('hidden');
+            rationaleContainer.classList.add('hidden');
+            while (answerButtonsElement.firstChild) {
+                answerButtonsElement.removeChild(answerButtonsElement.firstChild);
+            }
+        }
+
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const isCorrect = selectedButton.dataset.correct === "true";
+            
+            if (isCorrect) {
+                score++;
+            }
+            
+            // Show rationale
+            rationaleTextElement.innerText = selectedButton.dataset.rationale;
+            rationaleContainer.classList.remove('hidden');
+
+            Array.from(answerButtonsElement.children).forEach(button => {
+                setStatusClass(button, button.dataset.correct === "true");
+                button.disabled = true; // Disable all buttons after an answer is selected
+            });
+
+            if (totalQuestions > currentQuestionIndex + 1) {
+                nextButton.classList.remove('hidden');
+            } else {
+                // This is the last question, show results directly
+                setTimeout(showResults, 1500); // Wait a bit before showing results
+            }
+        }
+
+        function setStatusClass(element, correct) {
+            clearStatusClass(element);
+            if (correct) {
+                element.classList.add('correct');
+            } else {
+                element.classList.add('incorrect');
+            }
+        }
+
+        function clearStatusClass(element) {
+            element.classList.remove('correct');
+            element.classList.remove('incorrect');
+        }
+        
+        function showResults() {
+            questionArea.classList.add('hidden');
+            rationaleContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            document.getElementById('quiz-header').classList.add('hidden');
+
+            scoreTextElement.innerText = `${score} / ${totalQuestions}`;
+            
+            const percentage = (score / totalQuestions) * 100;
+            let message = "";
+            if (percentage === 100) {
+                message = "Невероятно! Перфектен резултат! Вие сте експерт по Generics!";
+            } else if (percentage >= 80) {
+                message = "Отличен резултат! Познавате материала в дълбочина.";
+            } else if (percentage >= 50) {
+                message = "Добър резултат! Справяте се добре със сложните концепции.";
+            } else {
+                message = "Не се отказвайте! Тези въпроси са трудни. Преговорете и опитайте отново.";
+            }
+            scoreMessageElement.innerText = message;
+            
+            resultsContainer.classList.remove('hidden');
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            showQuestion();
+        });
+        
+        restartButton.addEventListener('click', startQuiz);
+
+        // Start the quiz on page load
+        startQuiz();
+    </script>
+</body>
+</html>
+
