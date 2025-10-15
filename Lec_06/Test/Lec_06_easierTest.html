@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест по софтуерно тестване</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .answer-option {
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .correct {
+            background-color: #d1fae5 !important; /* Tailwind's green-100 */
+            border-color: #10b981 !important; /* Tailwind's green-500 */
+            color: #065f46; /* Tailwind's green-800 */
+        }
+        .incorrect {
+            background-color: #fee2e2 !important; /* Tailwind's red-100 */
+            border-color: #ef4444 !important; /* Tailwind's red-500 */
+            color: #991b1b; /* Tailwind's red-800 */
+        }
+        .disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 md:p-8">
+        <!-- Header -->
+        <div id="quiz-header" class="flex justify-between items-center border-b pb-4 mb-6">
+            <h1 class="text-xl md:text-2xl font-bold text-slate-800">Тест по софтуерно тестване</h1>
+            <div class="text-right">
+                <p class="text-sm text-slate-500">Въпрос <span id="question-number">1</span> от <span id="total-questions">50</span></p>
+                <p class="text-lg font-semibold text-indigo-600">Точки: <span id="score">0</span></p>
+            </div>
+        </div>
+
+        <!-- Question Body -->
+        <div id="question-body">
+            <p id="question-text" class="text-lg font-semibold text-slate-700 mb-6 min-h-[60px]"></p>
+            <div id="answer-options" class="space-y-3">
+                <!-- Answer options will be injected here -->
+            </div>
+        </div>
+        
+        <!-- Feedback and Navigation -->
+        <div id="feedback-container" class="mt-6 border-t pt-4">
+             <div id="feedback-card" class="hidden p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <p class="font-bold text-slate-700" id="feedback-title"></p>
+                <p class="text-slate-600 mt-1" id="feedback-text"></p>
+             </div>
+             <button id="next-button" class="hidden mt-4 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                Следващ въпрос
+            </button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-container" class="hidden text-center">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Тестът приключи!</h2>
+            <p class="text-slate-600 mb-6">Вашият финален резултат е:</p>
+            <p class="text-5xl font-extrabold text-indigo-600 mb-8"><span id="final-score">0</span> / 50</p>
+            <p class="text-xl font-medium text-slate-700 mb-6" id="result-message"></p>
+            <button id="restart-button" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                Започни отначало
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+    {
+        "question": "Според предоставения материал, в коя фаза на разработка поправката на дефект е най-скъпа?",
+        "options": [
+            "По време на дизайн",
+            "По време на разработка",
+            "По време на тестване",
+            "По време на поддръжка"
+        ],
+        "correct": 3,
+        "rationale": "Когато дефектът е открит от клиент, цената за поправка е най-висока поради потенциални загуби на репутация, данни и нуждата от спешни корекции."
+    },
+    {
+        "question": "Каква е основната разлика между \"тестване като фаза\" и \"тестване като процес\"?",
+        "options": [
+            "Тестването като фаза се извършва само от QA специалисти, докато като процес се извършва от целия екип.",
+            "Тестването като фаза е линеен етап след разработката, докато като процес е непрекъсната дейност, паралелна на разработката.",
+            "Тестването като фаза използва само ръчни тестове, а като процес - само автоматизирани.",
+            "Няма съществена разлика, това са просто различни термини за едно и също нещо."
+        ],
+        "correct": 1,
+        "rationale": "Това е ключовата разлика: старият модел изчаква краят на разработката, докато модерният интегрира тестването от самото начало."
+    },
+    {
+        "question": "Кой от изброените тестове е пример за нефункционално тестване?",
+        "options": [
+            "Unit тест",
+            "Integration тест",
+            "Security тест",
+            "Тест на потребителския интерфейс (UI)"
+        ],
+        "correct": 2,
+        "rationale": "Тестовете за сигурност проверяват *как* системата се защитава, а не *какво* прави, което ги прави нефункционални."
+    },
+    {
+        "question": "Какво представлява \"Test Coverage\"?",
+        "options": [
+            "Броят на написаните тестове за един проект.",
+            "Процентът от продуктовия код, който се проверява от автоматичните тестове.",
+            "Времето, необходимо за изпълнение на всички тестове.",
+            "Списък с всички функционалности, които трябва да бъдат тествани."
+        ],
+        "correct": 1,
+        "rationale": "Това е точната дефиниция. Метриката показва коя част от кода е \"покрита\" с тестове."
+    },
+    {
+        "question": "Каква е основната идея на Test-Driven Development (TDD)?",
+        "options": [
+            "Първо се пише продуктовият код, а след това се пишат тестове, за да се провери.",
+            "Тестовете се пишат паралелно с продуктовия код от различни екипи.",
+            "Първо се пише тест, който се проваля, и след това се пише код, който да го удовлетвори.",
+            "Продуктовият код изобщо не се тества, разчита се на статичен анализ."
+        ],
+        "correct": 2,
+        "rationale": "Това е цикълът \"Red-Green-Refactor\", който е в основата на TDD."
+    },
+    {
+        "question": "Коя JUnit анотация се използва, за да се маркира един метод като тест?",
+        "options": [
+            "@TestMethod",
+            "@Test",
+            "@RunTest",
+            "@TestCase"
+        ],
+        "correct": 1,
+        "rationale": "Това е основната анотация, която инструктира JUnit да изпълни маркирания метод като тест."
+    },
+    {
+        "question": "Кой метод от класа `Assertions` в JUnit се използва за проверка на равенство по съдържание между два обекта?",
+        "options": [
+            "assertSame()",
+            "assertTrue()",
+            "assertEquals()",
+            "assertContentEquals()"
+        ],
+        "correct": 2,
+        "rationale": "Този метод използва `.equals()` метода на обектите, за да сравни тяхното съдържание."
+    },
+    {
+        "question": "За какво служи анотацията `@BeforeEach` в JUnit?",
+        "options": [
+            "Изпълнява се веднъж, преди всички тестове в класа.",
+            "Изпълнява се преди всеки отделен `@Test` метод в класа.",
+            "Изпълнява се след всеки отделен `@Test` метод в класа.",
+            "Изпълнява се само ако предишният тест е бил успешен."
+        ],
+        "correct": 1,
+        "rationale": "Точно така, тя се използва за подготовка на средата (test fixture) преди всеки тест."
+    },
+    {
+        "question": "Какво е основното предназначение на един Stub в контекста на тестването?",
+        "options": [
+            "Да записва и проверява взаимодействията с него (колко пъти е извикан даден метод).",
+            "Да предостави предварително зададени, фиксирани отговори, когато неговите методи бъдат извикани.",
+            "Да замени напълно реалната имплементация с по-бърза такава.",
+            "Да провали теста, ако се извика неочакван метод."
+        ],
+        "correct": 1,
+        "rationale": "Това е същината на Stub-а - да симулира определено състояние, като връща готови данни."
+    },
+    {
+        "question": "Кога бихте използвали Mock вместо Stub?",
+        "options": [
+            "Когато тестът има нужда от зависимост, за да върне някаква стойност и да продължи.",
+            "Когато трябва да се провери дали тестваният клас правилно комуникира със своята зависимост.",
+            "Когато реалният обект все още не е разработен.",
+            "Когато искаме тестът да работи по-бързо."
+        ],
+        "correct": 1,
+        "rationale": "Точно така, Mock се използва, когато искаме да верифицираме поведението (behavior) - например, дали даден метод е извикан точно веднъж с определени параметри."
+    },
+    {
+        "question": "Какъв тип тест проверява най-малките, изолирани части от кода, като например една функция?",
+        "options": [
+            "Интеграционен тест",
+            "End-to-End тест",
+            "Unit тест",
+            "Stress тест"
+        ],
+        "correct": 2,
+        "rationale": "Това е точната дефиниция - тестване на \"атомарна\" функционалност в изолация."
+    },
+    {
+        "question": "Кой от следните е недостатък на подхода \"тестване като фаза\"?",
+        "options": [
+            "Дефектите се откриват твърде рано, когато изискванията още не са ясни.",
+            "Цената за поправка на дефекти е много висока, защото се откриват късно.",
+            "Изисква твърде много комуникация между разработчици и QA специалисти.",
+            "Води до прекалено много ненужни тестове."
+        ],
+        "correct": 1,
+        "rationale": "Това е основният проблем - откриването на бъгове точно преди пускането на продукта оскъпява значително поправката им."
+    },
+    {
+        "question": "Каква е целта на Stress тестовете?",
+        "options": [
+            "Да се измери бързината на системата при нормално натоварване.",
+            "Да се намери точката на счупване на системата и да се види как се държи при екстремни условия.",
+            "Да се провери колко лесно се използва софтуерът от крайния потребител.",
+            "Да се открият уязвимости в сигурността."
+        ],
+        "correct": 1,
+        "rationale": "Точно така, системата се натоварва над лимита й, за да се проверят нейните граници."
+    },
+    {
+        "question": "Според конвенцията за именуване в JUnit, как трябва да се казва тестовият клас за клас на име `UserService`?",
+        "options": [
+            "TestUserService",
+            "UserServiceTests",
+            "UserServiceTest",
+            "Tests.UserService"
+        ],
+        "correct": 2,
+        "rationale": "Това е правилната конвенция - името на класа, последвано от суфикса 'Test'."
+    },
+    {
+        "question": "Каква е ролята на параметъра `delta` в метода `assertEquals(double expected, double actual, double delta)`?",
+        "options": [
+            "Той указва максималното време за изпълнение на теста.",
+            "Той представлява позволената грешка (толеранс) при сравнение на числа с плаваща запетая.",
+            "Той е брояч, който показва колко пъти да се изпълни проверката.",
+            "Това е съобщение за грешка, което се показва, ако тестът се провали."
+        ],
+        "correct": 1,
+        "rationale": "Точно така, поради естеството на представянето на числа с плаваща запетая, директното сравнение може да е неточно. 'delta' решава този проблем."
+    },
+    {
+        "question": "Коя двойка анотации се изпълнява само по веднъж за целия тестов клас?",
+        "options": [
+            "@BeforeEach и @AfterEach",
+            "@BeforeAll и @AfterAll",
+            "@Test и @Disabled",
+            "@Order и @TestMethodOrder"
+        ],
+        "correct": 1,
+        "rationale": "Точно така. Те се използват за \"скъпи\" операции като свързване с база данни, които трябва да се случат само веднъж."
+    },
+    {
+        "question": "Какво трябва да е специфичното изискване за методите, анотирани с `@BeforeAll` и `@AfterAll`?",
+        "options": [
+            "Трябва да са `private`.",
+            "Трябва да връщат `boolean` стойност.",
+            "Трябва да са `static`.",
+            "Трябва да приемат параметър от тип `TestInfo`."
+        ],
+        "correct": 2,
+        "rationale": "Тъй като се изпълняват преди създаването на инстанция на тестовия клас, те трябва да са статични."
+    },
+    {
+        "question": "Защо е лоша практика тестовете да са зависими един от друг?",
+        "options": [
+            "Защото JUnit не позволява зависимости между тестове.",
+            "Защото това прави тестовете по-трудни за разбиране, поддръжка и може да доведе до каскадни провали.",
+            "Защото зависимите тестове се изпълняват много по-бавно.",
+            "Защото не могат да се използват Mock обекти в зависими тестове."
+        ],
+        "correct": 1,
+        "rationale": "Това е основният проблем. Провалът на един тест може да провали всички следващи, дори ако тяхната функционалност е коректна."
+    },
+    {
+        "question": "Коя анотация ще използвате, за да изпълните един и същ тест няколко пъти с различни входни данни?",
+        "options": [
+            "@RepeatedTest",
+            "@Test",
+            "@ParameterizedTest",
+            "@DynamicTest"
+        ],
+        "correct": 2,
+        "rationale": "Това е правилната анотация, която в комбинация с източник на данни (като `@ValueSource`) позволява изпълнение с различни аргументи."
+    },
+    {
+        "question": "Какъв е основният недостатък на ръчното писане на Stub класове?",
+        "options": [
+            "Те работят по-бавно от Mock обектите.",
+            "Не могат да връщат сложни обекти, а само примитивни типове.",
+            "За всеки тестов сценарий може да се наложи създаването на нов .class файл, което води до много допълнителен код.",
+            "Не могат да се използват в комбинация с JUnit."
+        ],
+        "correct": 2,
+        "rationale": "Това е legacy подходът. Нуждата от създаване и поддръжка на много отделни класове е голям недостатък."
+    },
+    {
+        "question": "Каква е основната разлика между `assertArrayEquals()` и `assertEquals()` при тестване на масиви?",
+        "options": [
+            "Няма разлика, те са взаимозаменяеми.",
+            "`assertEquals()` сравнява съдържанието на масивите, а `assertArrayEquals()` сравнява референциите им.",
+            "`assertArrayEquals()` сравнява съдържанието елемент по елемент, докато `assertEquals()` проверява само дали референциите сочат към един и същ обект.",
+            "`assertArrayEquals()` може да се използва само за масиви от примитивни типове."
+        ],
+        "correct": 2,
+        "rationale": "Това е правилната разлика. За сравнение на съдържание на масиви винаги трябва да се използва `assertArrayEquals()`."
+    },
+    {
+        "question": "Кой е правилният жизнен цикъл на unit тест, който използва mocking (според лекцията)?",
+        "options": [
+            "Arrange-Act-Assert",
+            "Setup data -> Setup expectations -> Exercise -> Verify expectations -> Verify state -> TearDown",
+            "Setup -> Run -> Verify",
+            "Exercise -> Assert -> Cleanup"
+        ],
+        "correct": 1,
+        "rationale": "Това е пълният цикъл, който включва конфигуриране на очакванията към mock-a и верифициране на взаимодействията с него."
+    },
+    {
+        "question": "Къде трябва да се намира тестовият код в стандартна Maven или Gradle архитектура?",
+        "options": [
+            "В същата директория като продуктовия код, но с разширение .test.java.",
+            "В директория `src/main/tests`.",
+            "В директория `src/test`.",
+            "Няма значение къде се намира, стига да е в същия проект."
+        ],
+        "correct": 2,
+        "rationale": "Това е конвенцията, която позволява на инструментите за билд автоматично да компилират и изпълняват тестовете, но да ги изключват от финалния пакет."
+    },
+    {
+        "question": "Коя от следните е добра практика при писане на Unit тестове?",
+        "options": [
+            "Да се тества всяка private метод директно.",
+            "Да се постигне 100% test coverage на всяка цена.",
+            "Да не се тества тривиален код като getters и setters.",
+            "Всеки unit тест трябва да зависи от поне един друг, за да се симулира реален сценарий."
+        ],
+        "correct": 2,
+        "rationale": "Това е добра практика, тъй като тестването на такъв код не добавя стойност и само увеличава поддръжката на тестовете."
+    },
+    {
+        "question": "Какво представляват `Assumptions` в JUnit?",
+        "options": [
+            "Същото като `Assertions`, но с по-кратък синтаксис.",
+            "Проверки, които ако не са верни, провалят целия тестов пакет.",
+            "Проверки в началото на теста, които ако не са верни, маркират теста като пропуснат (skipped).",
+            "Анотации, които описват какво се предполага, че прави тестът."
+        ],
+        "correct": 2,
+        "rationale": "Това е тяхната роля. Използват се, когато един тест има смисъл да се изпълни само при определени външни условия (напр. определена операционна система)."
+    },
+    {
+        "question": "Каква е основната цел на изолацията при Unit тестването?",
+        "options": [
+            "Да се гарантира, че тестът ще се изпълни възможно най-бързо.",
+            "Да се тества само една единица (unit) код, без влиянието на нейните зависимости.",
+            "Да се намали количеството на тестовия код.",
+            "Да се позволи на няколко теста да се изпълняват паралелно."
+        ],
+        "correct": 1,
+        "rationale": "Това е ключовата идея. Ако тестът се провали, трябва да сме сигурни, че проблемът е в тествания unit, а не в някой от неговите съседи."
+    },
+    {
+        "question": "Кой от следните видове тестове е най-близо до гледната точка на крайния потребител?",
+        "options": [
+            "Unit тестове",
+            "Интеграционни тестове",
+            "Usability тестове",
+            "Crash тестове"
+        ],
+        "correct": 2,
+        "rationale": "Тези тестове директно оценяват колко лесен, интуитивен и удобен е софтуерът, което е точно от гледната точка на потребителя."
+    },
+    {
+        "question": "Какво означава, че един тест трябва да е \"себедостатъчен\"?",
+        "options": [
+            "Трябва да тества абсолютно всичко в класа.",
+            "Трябва сам да подготви средата си и да почисти след себе си, без да зависи от други тестове.",
+            "Трябва да е написан в един-единствен файл.",
+            "Трябва да работи без нужда от JUnit framework."
+        ],
+        "correct": 1,
+        "rationale": "Това е същината на добрия, независим тест. `@BeforeEach` и `@AfterEach` помагат за това."
+    },
+    {
+        "question": "Коя анотация ще използвате, за да спрете временно изпълнението на даден тест, без да го триете?",
+        "options": [
+            "@Stop",
+            "@Ignore",
+            "@Disabled",
+            "@Skip"
+        ],
+        "correct": 2,
+        "rationale": "Това е правилната анотация в JUnit 5, която инструктира изпълнителя на тестове да пропусне този тест."
+    },
+    {
+        "question": "Какъв е проблемът при сравняването на две колекции с `assertEquals`?",
+        "options": [
+            "Работи перфектно за всякакъв вид колекции.",
+            "Сравнява само размера на колекциите, но не и съдържанието им.",
+            "Проверява дали двете променливи сочат към един и същ обект колекция, а не дали съдържат едни и същи елементи.",
+            "Хвърля изключение `UnsupportedOperationException`."
+        ],
+        "correct": 2,
+        "rationale": "Това е основният проблем, идентичен с този при масивите."
+    },
+    {
+        "question": "Кой метод трябва да се използва за правилно сравнение на съдържанието на две колекции (напр. `List`)?",
+        "options": [
+            "assertListEquals()",
+            "assertIterableEquals()",
+            "assertEquals()",
+            "assertDeepEquals()"
+        ],
+        "correct": 1,
+        "rationale": "Това е правилният метод, който сравнява две итерируеми колекции елемент по елемент."
+    },
+    {
+        "question": "Какво е \"Test Fixture\"?",
+        "options": [
+            "Библиотека с готови тестове, която може да се добави към проект.",
+            "Фиксираната начална среда или състояние, необходимо за изпълнението на един тест.",
+            "Грешка в самия тестов код, а не в продуктовия.",
+            "Инструмент за автоматично генериране на тестове."
+        ],
+        "correct": 1,
+        "rationale": "Точно така. Това включва обектите, данните и конфигурацията, които са нужни, за да започне тестът при предвидими условия."
+    },
+    {
+        "question": "Кой `Assertions` метод ще провали теста безусловно?",
+        "options": [
+            "fail()",
+            "assertFalse(true)",
+            "assertNull(new Object())",
+            "error()"
+        ],
+        "correct": 0,
+        "rationale": "Това е точният метод. Използва се, за да се маркира, че е достигната част от кода, която не би трябвало да е достижима."
+    },
+    {
+        "question": "В какъв ред ще се изпълнят тестовете, ако се използва анотацията `@TestMethodOrder(MethodOrderer.MethodName.class)`?",
+        "options": [
+            "В реда, в който са дефинирани в класа.",
+            "По азбучен ред на имената на методите.",
+            "В произволен ред.",
+            "В обратен азбучен ред."
+        ],
+        "correct": 1,
+        "rationale": "Това е правилният отговор. JUnit ще сортира методите лексикографски по тяхното име."
+    },
+    {
+        "question": "Каква е целта на анотацията `@DisplayName`?",
+        "options": [
+            "Да промени името на Java метода.",
+            "Да зададе по-детайлно и четимо име на тест или клас, което се показва в докладите.",
+            "Да свърже теста с определен елемент от потребителския интерфейс.",
+            "Да укаже името на автора на теста."
+        ],
+        "correct": 1,
+        "rationale": "Това позволява използването на интервали, специални символи и дори емоджита, за да се опише по-добре целта на теста."
+    },
+    {
+        "question": "Какво е \"Regression\" (регресия) в контекста на софтуерното тестване?",
+        "options": [
+            "Нов бъг в новоразработена функционалност.",
+            "Ситуация, при която нова промяна в кода е счупила стара, вече работеща функционалност.",
+            "Постепенно забавяне на производителността на системата с времето.",
+            "Връщане към по-стара версия на кода от системата за контрол на версиите."
+        ],
+        "correct": 1,
+        "rationale": "Това е точната дефиниция. Unit тестовете действат като \"предпазна мрежа\" срещу регресии."
+    },
+    {
+        "question": "Кой от следните тестове е най-подходящ за проверка на взаимодействието между `OrderService` и `PaymentGateway`?",
+        "options": [
+            "Unit тест за `OrderService`.",
+            "Интеграционен тест.",
+            "Performance тест.",
+            "Unit тест за `PaymentGateway`."
+        ],
+        "correct": 1,
+        "rationale": "Това е перфектният кандидат. Интеграционните тестове проверяват дали два или повече модула работят коректно заедно."
+    },
+    {
+        "question": "Кое от следните твърдения за Mock обектите е вярно?",
+        "options": [
+            "Основната им цел е да предоставят състояние (state).",
+            "Те могат да бъдат програмирани да очакват определени извиквания и да верифицират дали са се случили.",
+            "Те са по-стар подход в сравнение със Stub-овете.",
+            "Не могат да връщат стойности, а само да записват извиквания."
+        ],
+        "correct": 1,
+        "rationale": "Това е ключовата им характеристика - те се използват за верификация на поведението (behavior)."
+    },
+    {
+        "question": "Какво е Test Suite?",
+        "options": [
+            "Документ, който описва всички тест казуси.",
+            "Механизъм за групиране на тестови класове или пакети, за да могат да се изпълняват заедно.",
+            "Среда за разработка (IDE), специализирана за писане на тестове.",
+            "Софтуерен бъг, който се проявява само по време на тестване."
+        ],
+        "correct": 1,
+        "rationale": "Това е точната дефиниция. Позволява лесното стартиране на определен набор от тестове, например всички интеграционни тестове."
+    },
+    {
+        "question": "Защо е важно да се подава смислено съобщение към `assertion` методите?",
+        "options": [
+            "Защото без съобщение тестът няма да се компилира.",
+            "Защото съобщението се използва за генериране на документация.",
+            "Защото при провал на теста, това съобщение дава ясна информация защо се е провалил и какво се е очаквало.",
+            "Защото JUnit изисква всички `assertion` методи да имат съобщение."
+        ],
+        "correct": 2,
+        "rationale": "Това е основната причина. Доброто съобщение спестява много време при дебъгване на провален тест."
+    },
+    {
+        "question": "Кое твърдение описва най-точно \"White-box\" тестването?",
+        "options": [
+            "Тестване, при което тестерът няма достъп до вътрешната структура на кода.",
+            "Тестване, базирано на вътрешната логика и структура на кода.",
+            "Тестване, извършвано от крайни потребители в реална среда.",
+            "Тестване, което се фокусира само върху потребителския интерфейс."
+        ],
+        "correct": 1,
+        "rationale": "Точно така. Тестерът познава кода и създава тестове, които да покрият специфични пътища и условия в него. Unit тестовете са типичен пример."
+    },
+    {
+        "question": "Кое твърдение описва най-точно \"Black-box\" тестването?",
+        "options": [
+            "Тестване, базирано на познаване на вътрешната структура на кода.",
+            "Тестване, извършвано само от разработчиците на софтуера.",
+            "Тестване, което проверява функционалността на приложението без да се познава вътрешната му структура или имплементация.",
+            "Тестване, което се изпълнява само през нощта."
+        ],
+        "correct": 2,
+        "rationale": "Това е същността на метода. Системата се третира като \"черна кутия\" - подават се входни данни и се проверяват изходните, без да се знае какво се случва вътре."
+    },
+    {
+        "question": "Какво е \"Smoke Test\"?",
+        "options": [
+            "Изчерпателен тест на цялата система, който отнема няколко дни.",
+            "Бърз, повърхностен тест, чиято цел е да провери дали най-критичните функционалности на приложението работят.",
+            "Тест, който проверява как системата се справя със задимяване в сървърното помещение.",
+            "Тест на потребителския интерфейс за откриване на визуални дефекти."
+        ],
+        "correct": 1,
+        "rationale": "Точно така. Целта е да се установи дали билдът е достатъчно стабилен, за да се премине към по-сериозно тестване. Името идва от електрониката - ако след включване не излезе дим, значи е добре."
+    },
+    {
+        "question": "Кое от следните НЕ е част от цикъла на TDD (Test-Driven Development)?",
+        "options": [
+            "Red (Червено) - Написване на тест, който се проваля.",
+            "Green (Зелено) - Написване на код, който кара теста да мине.",
+            "Refactor (Рефакториране) - Подобряване на кода, докато тестовете продължават да минават.",
+            "Deploy (Пускане) - Пускане на кода в продукционна среда."
+        ],
+        "correct": 3,
+        "rationale": "Пускането на кода е част от по-големия процес на разработка (CI/CD), но не и от основния, повтарящ се цикъл на TDD."
+    },
+    {
+        "question": "Какво е основното предимство на автоматизираните тестове пред ръчните?",
+        "options": [
+            "Те могат да намерят повече бъгове, свързани с потребителското изживяване (usability).",
+            "Те са по-евтини за първоначално създаване.",
+            "Те са бързи, повтаряеми и надеждни за регресионно тестване.",
+            "Не изискват никаква поддръжка след като бъдат написани."
+        ],
+        "correct": 2,
+        "rationale": "Това е ключовото им предимство. Веднъж написани, те могат да се изпълняват хиляди пъти без грешка и много по-бързо от човек, което ги прави идеални за проверка на регресии."
+    },
+    {
+        "question": "В кой случай е по-подходящо да се използва ръчно тестване вместо автоматизирано?",
+        "options": [
+            "При проверка на голям брой математически изчисления.",
+            "При регресионно тестване на стабилна част от приложението.",
+            "При Exploratory (изследователско) тестване, където тестерът свободно проучва приложението, за да намери бъгове.",
+            "При тестване на API."
+        ],
+        "correct": 2,
+        "rationale": "Този тип тестване разчита на човешката креативност, интуиция и опит, за да открие неочаквани проблеми, и не може да бъде лесно автоматизиран."
+    },
+    {
+        "question": "Какво означава AAA в контекста на структурата на един unit тест?",
+        "options": [
+            "Authentication, Authorization, Accounting",
+            "Arrange, Act, Assert",
+            "Automate, Analyze, Announce",
+            "After, All, Assert"
+        ],
+        "correct": 1,
+        "rationale": "Това е стандартният модел за структуриране на тестове: Подреди (създай обекти и условия), Действай (извикай тествания метод), Провери (използвай assert, за да провериш резултата)."
+    },
+    {
+        "question": "Кой е основният риск при недостатъчно интеграционно тестване?",
+        "options": [
+            "Отделните функции може да работят перфектно в изолация, но системата като цяло да не работи, когато се сглобят.",
+            "Производителността на приложението ще бъде ниска.",
+            "Потребителският интерфейс ще бъде труден за използване.",
+            "Кодът ще има ниско тестово покритие (test coverage)."
+        ],
+        "correct": 0,
+        "rationale": "Това е точният проблем. Грешки в комуникацията, несъвместими данни или неочаквани взаимодействия между модулите могат да се проявят само когато те работят заедно."
+    },
+    {
+        "question": "Кое от следните е пример за \"Test Double\"?",
+        "options": [
+            "JUnit",
+            "Mock",
+            "Assertion",
+            "Maven"
+        ],
+        "correct": 1,
+        "rationale": "Mock е вид Test Double, който симулира обект, за да се верифицира поведение. Stub, Fake, Dummy и Spy са други видове."
+    },
+    {
+        "question": "Каква е целта на `assertNotSame()` в JUnit?",
+        "options": [
+            "Проверява дали два обекта са различни по съдържание.",
+            "Проверява дали две референции сочат към различни обекти в паметта.",
+            "Проверява дали два масива имат различно съдържание.",
+            "Проверява дали един обект не е `null`."
+        ],
+        "correct": 1,
+        "rationale": "Това е точната цел. Тестът ще мине, ако двата обекта, макар и с еднакво съдържание, са две различни инстанции."
+    }
+];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // DOM Elements
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const scoreEl = document.getElementById('score');
+        const questionTextEl = document.getElementById('question-text');
+        const answerOptionsEl = document.getElementById('answer-options');
+        const nextButton = document.getElementById('next-button');
+        const feedbackCardEl = document.getElementById('feedback-card');
+        const feedbackTitleEl = document.getElementById('feedback-title');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        
+        const quizHeader = document.getElementById('quiz-header');
+        const questionBody = document.getElementById('question-body');
+        const feedbackContainer = document.getElementById('feedback-container');
+
+        const resultsContainer = document.getElementById('results-container');
+        const finalScoreEl = document.getElementById('final-score');
+        const resultMessageEl = document.getElementById('result-message');
+        const restartButton = document.getElementById('restart-button');
+
+        function loadQuestion() {
+            // Reset state
+            answerOptionsEl.innerHTML = '';
+            feedbackCardEl.classList.add('hidden');
+            nextButton.classList.add('hidden');
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            
+            // Populate question data
+            questionNumberEl.textContent = currentQuestionIndex + 1;
+            totalQuestionsEl.textContent = quizData.length;
+            scoreEl.textContent = score;
+            questionTextEl.innerHTML = currentQuestion.question; // Use innerHTML to render code tags if any
+
+            // Create answer buttons
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerHTML = option;
+                button.dataset.index = index;
+                button.className = 'answer-option w-full text-left p-4 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+                button.addEventListener('click', selectAnswer);
+                answerOptionsEl.appendChild(button);
+            });
+        }
+
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const selectedIndex = parseInt(selectedButton.dataset.index);
+            const correctIndex = quizData[currentQuestionIndex].correct;
+
+            // Disable all buttons
+            Array.from(answerOptionsEl.children).forEach(btn => {
+                btn.classList.add('disabled');
+            });
+
+            // Check if correct and apply styles
+            if (selectedIndex === correctIndex) {
+                score++;
+                scoreEl.textContent = score;
+                selectedButton.classList.add('correct');
+                feedbackTitleEl.textContent = "Правилно!";
+                feedbackCardEl.classList.remove('bg-red-50', 'border-red-200');
+                feedbackCardEl.classList.add('bg-green-50', 'border-green-200');
+            } else {
+                selectedButton.classList.add('incorrect');
+                // Highlight the correct answer
+                answerOptionsEl.children[correctIndex].classList.add('correct');
+                feedbackTitleEl.textContent = "Грешно!";
+                 feedbackCardEl.classList.remove('bg-green-50', 'border-green-200');
+                 feedbackCardEl.classList.add('bg-red-50', 'border-red-200');
+            }
+
+            // Show feedback
+            feedbackTextEl.textContent = quizData[currentQuestionIndex].rationale;
+            feedbackCardEl.classList.remove('hidden');
+            
+            // Show next button
+            if (currentQuestionIndex < quizData.length - 1) {
+                nextButton.textContent = "Следващ въпрос";
+            } else {
+                nextButton.textContent = "Виж резултати";
+            }
+            nextButton.classList.remove('hidden');
+        }
+
+        function showResults() {
+             quizHeader.classList.add('hidden');
+             questionBody.classList.add('hidden');
+             feedbackContainer.classList.add('hidden');
+             resultsContainer.classList.remove('hidden');
+             finalScoreEl.textContent = score;
+             
+             const percentage = (score / quizData.length) * 100;
+             let message = "";
+             if (percentage >= 90) {
+                 message = "Отлично! Познанията ви са на експертно ниво.";
+             } else if (percentage >= 70) {
+                 message = "Много добре! Разбирате повечето концепции.";
+             } else if (percentage >= 50) {
+                 message = "Добър опит! Имате нужда от още малко преговор.";
+             } else {
+                 message = "Нуждаете се от повече подготовка. Не се отказвайте!";
+             }
+             resultMessageEl.textContent = message;
+        }
+        
+        function handleNextButtonClick() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+        
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            resultsContainer.classList.add('hidden');
+            quizHeader.classList.remove('hidden');
+            questionBody.classList.remove('hidden');
+            feedbackContainer.classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        nextButton.addEventListener('click', handleNextButtonClick);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Initial load
+        loadQuestion();
+    </script>
+</body>
+</html>
