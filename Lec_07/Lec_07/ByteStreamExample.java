@@ -16,3 +16,6 @@ while((current = in.read()) != 1) {
 }
 
 in.close();
+
+// output:
+// Ivan / Ð¡Ð¿Ð°Ñ�Ð¾Ð²
