@@ -32,4 +32,4 @@ boolean equals(Path anotherPath);
 boolean startsWith(Path anotherPath);
 
 //returns true if the currenth path ends with anotherPath
-booln endsWith(Path anotherPath);
+booln endsWith(Path anotherPath); 
