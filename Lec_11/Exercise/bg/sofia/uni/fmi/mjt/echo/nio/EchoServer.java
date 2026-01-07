@@ -25,7 +25,7 @@ public class EchoServer {
     // the size of the buffer that is going to be used for communication between the channels and the server
     private static final int BUFFER_SIZE = 1024;
 
-    public static void main() {
+    public static void main(String[] args) {
         // Starting up the server
         try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
 
@@ -85,6 +85,7 @@ public class EchoServer {
                         sc.write(buffer);
 
                     } else if (key.isAcceptable()) { // if a new client wants to connect
+                        System.out.println("New client has been connected");
                         // getting the server socket channel
                         ServerSocketChannel sockChannel = (ServerSocketChannel) key.channel();
                         // accepting the new connection with the client
