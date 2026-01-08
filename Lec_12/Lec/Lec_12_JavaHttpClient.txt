@@ -1,0 +1,78 @@
+* Java HTTP Client
+
+    Java HTTP Client е стандартният инструмент в езика Java за комуникация с уеб сървъри, като е част от JDK (от Java 11 насам)
+
+    Използва се за изпращане на HTTP заявки и получаване на отговори
+    # Позволява на Java приложение да комуникира с други приложения в интернет 
+
+    Поддържа HTTP/1.1 и HTTP/2Работи както синхронно, така и асинхронно
+    # Синхронно означава, че програмата сприра и чака отговора от сървъра (тоест блокира) преди да продължи
+    # Асинхронно: Програмата изпраща заявката и продължава да върши друга работа, а когато отговорът дойде, тя го обработва
+
+    Основният пакет, където се намират класовете, от които имат нужда се намират в пакета java.net.http 
+
+* HttpClient – нашият „браузър“ в Java
+
+    HttpClient е входната точка на API-то, като представлява клиент за пращане на HTTP заявки и обработка на съответните отговори
+    # С други думи без този обект не можеш да пратиш заявка или да получиш отговор 
+
+    Една инстанция на HttpClient се създава от статичен builder метод на класа
+    
+    Builder-ът може да се ползва за конфигуриране на клиента
+    # Дали примерно клиента предпочита дадена версия, дали да следва redirects или дали да използва прокси
+
+    Веднъж създаден, е immutable, но може да се ползва за пращане на много заявки
+    # Не е нужно да създаваш нов клиент за всяка отделна заявка, създаваш един и го ползваш многократно
+
+    var client = HttpClient.newHttpClient();
+    var client = HttpClient.newBuilder().build(); // equivalent
+    # На вторият ред код се използва Builder desing pattern-a 
+
+    Пример:
+    HttpClient client = HttpClient.newBuilder()
+      .version(Version.HTTP_2) # избор на версия за http
+      .followRedirects(Redirect.SAME_PROTOCOL) # дали да следва redirects
+      .proxy(ProxySelector.of(new InetSocketAddress("www-proxy.com", 8080))) # дали да има междинен сървър
+      .build(); # създаване на самият HTTP client 
+
+* HttpRequest
+
+    Ако HttpClient е браузърът, то HttpRequest е конкретната страница или команда, която написваме в адресната лента и изпращаме
+
+    Този клас представлява HTTP заявка, включително URI, метод, хедъри и т.н.
+
+    HttpRequest отново се инстанцира чрез статичен builder метод на класа
+
+    Класът е направен удобен за най-често използваните действия като съдържа готови методи:
+    - GET()
+    - POST()
+    - DELETE()
+    - PUT()
+
+    Веднъж създаден, е immutable, но може да се праща многократно
+
+    Примери:
+    var request1 = HttpRequest.newBuilder(URI.create("https://www.apple.com/"))
+        .build();
+
+    var request2 = HttpRequest.newBuilder()
+        .uri(URI.create("https://www.apple.com/"))
+        .build(); // equivalent
+
+    var request3 = HttpRequest.newBuilder()
+        .uri(URI.create("http://openjdk.java.net/"))
+        .timeout(Duration.ofMinutes(1))
+        .header("Content-Type", "application/json")
+        .POST(BodyPublishers.ofFile(Paths.get("file.json")))
+        .build();
+
+* HttpResponse<T>
+
+    HttpResponse<T> е резултата, който се получава обратно от сървъра, реално представлява HTTP response, включително header-а и body-то
+    # Понеже HttpResponse<T> e генеричен, той може да съдържа примерно текст, файл или картинак или байтове 
+
+    Този обект се получава наготова, защото нстанции на имплементации на този интерфейс се получават в резултат на пращане на HttpRequest от HttpClient
+
+    Какви методи се съдържат в HttpResponse<T>:
+    - 
+
