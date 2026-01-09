@@ -74,5 +74,30 @@
     Този обект се получава наготова, защото нстанции на имплементации на този интерфейс се получават в резултат на пращане на HttpRequest от HttpClient
 
     Какви методи се съдържат в HttpResponse<T>:
-    - 
+    - T body() съдържа тялото на отговора, това може да е HTML кода на страницата или JSON данните или изтегленият файл
+    - int statusCode() представлява HTTP статус кода, като се проверява какво е върнал сървъра
+    - HttpHeaders headers() връща хедърите на отговора 
+    - HttpRequest request() връща httpRequest-a отговарящ за този отговор
+    - URI uri() може да се види на кой адрес сме получили отговора 
+    
+* Изпращане на заявки
+
+    (Синхронен метод)
+    Когато се извика метода client.send() програмата замръзва на този ред и чака, докато сървъра върне отговор
+    Пример:
+    - HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    # Изпраща подготвената заявка към сървъра и спира изпълнението на програмата, докато не получи отговор
+    # HttpResponse.BodyHandlers.ofString() указва на клиента как да прочете данните, които се връщат
+    - System.out.println(response.statusCode());
+    # връща стойността на числото и се вижда дали заявката е била успешна
+    - System.out.println(response.body());
+    # Връща същинското съдържание на отговора, този метод ще върне string, защото горе така е посочено, но може това да е HTML код или JSON данни
+
+    (Асинхронен метод)
+    Методът client.sendAsync() не блокира изпълнението на програмата, а обещава, че ще се върне такъв отговор в бъдещето
+    Пример:
+    CompletableFuture<HttpResponse<String>> response = client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+    response.thenApply(HttpResponse::statusCode).thenAccept(System.out::println);
+    response.thenApply(HttpResponse::body).thenAccept(System.out::println);
+    
 
