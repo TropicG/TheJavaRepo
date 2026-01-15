@@ -149,7 +149,7 @@
     # Consumer има .accept() метода, точно както Supplier има .get() метода
     # реално албда израза, който се пише е имплементацията на този accept метод 
     
-    Съдържа и един default метод andThen(Consumer<T> after)
+    Съдържа и един default метод Comsumer<T> andThen(Consumer<? super T> after)
     # Това е функция, която позволява свързването на няколко Consumer-a един след друг
 
     Пример:
